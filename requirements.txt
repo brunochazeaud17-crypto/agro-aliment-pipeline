@@ -4,3 +4,5 @@ requests
 nltk
 streamlit
 plotly
+wordcloud
+matplotlib
