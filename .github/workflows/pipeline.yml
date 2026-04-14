@@ -2,9 +2,14 @@ name: Daily Agro Data Pipeline
 
 on:
   schedule:
-    # Lance le script tous les jours à 08h00 (Heure UTC)
     - cron: '0 8 * * *'
-  workflow_dispatch: # Permet de lancer le robot manuellement via un bouton sur GitHub
+  workflow_dispatch:
+
+# --- LA CORRECTION EST ICI ---
+# On donne explicitement au robot le droit d'écrire (modifier) le dépôt
+permissions:
+  contents: write 
+# -----------------------------
 
 jobs:
   run-pipeline:
@@ -12,10 +17,10 @@ jobs:
 
     steps:
     - name: 📥 Récupération du code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4 # <- Mise à jour (v3 -> v4)
 
     - name: 🐍 Installation de Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5 # <- Mise à jour (v4 -> v5)
       with:
         python-version: '3.10'
 
@@ -25,7 +30,6 @@ jobs:
 
     - name: 🚀 Exécution du script de données
       env:
-        # On injecte la clé API cachée dans le coffre-fort
         NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
       run: |
         python data_pipeline.py
@@ -34,7 +38,6 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        # On force l'ajout de la base de données mise à jour (même si elle est dans le .gitignore)
         git add -f agri_data.db
         git commit -m "Mise à jour automatique des données boursières et NLP" || echo "Aucune nouvelle donnée"
         git push
