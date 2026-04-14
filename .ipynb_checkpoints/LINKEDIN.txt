@@ -1,0 +1,29 @@
+- 22/02/26 :
+- 01/03/26 :
+- 08/03/26 :
+- 15/03/26 :
+- 22/03/26 :
+- 29/03/26 :
+- 05/04/26 :
+- 12/04/26 : 
+
+Ma mère m'a dit un jour : " le plus important c'est qu'on a un toit au dessus de la tete
+et de quoi manger chaque jour que Dieu fait."
+
+Le sujet de la souverraineté alimentaire est selon moi la pierre angulaire de toute civilisation.
+"Un esprit sain dans un corps saint" résonne comme l'écho d'un axiome mathématique d'une loi imuable de l'existence.
+
+Aujourd'hui, le système agro alimentaire mondiale est cantonnée à des angrais dependantes de produits pétroliers.
+Et avec les crises que connaissent le secteur de l'énergie fossile, c'est la souverraineté alimentaire qui est directement visée.
+
+C'est donc dans cette optique que je vous présente mon tout dernier projet en tant que Data scientist.
+
+En quelques mots, il s'agit de pouvoir suivre quotidiennement la valorisation boursière des 6 plus grandes 
+entreprises du secteur agro alimentaire européen. Ce suivi se conjugue à une analyse des sentiments basée sur l'actualité
+géopolitique mondiale.
+
+Les choix économico-politiques des élites conduisent ils à un retressisement du seuil collectif de vulnérabilité 
+alimentaire ?
+
+Le coeur de ce projet est de mettre en lumière les conséquences communes des différentes incertitudes auquel fait fasse
+le peuple que nous sommes.

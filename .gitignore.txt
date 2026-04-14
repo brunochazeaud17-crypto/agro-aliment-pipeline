@@ -1,0 +1,6 @@
+# Ignorer la base de données locale
+agri_data.db
+
+# Ignorer les dossiers cachés de Jupyter et Python
+.ipynb_checkpoints/
+__pycache__/
