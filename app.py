@@ -100,7 +100,7 @@ with st.expander("📌 A propos de ce projet - Cliquez pour ouvrir/fermer", expa
         st.markdown("""
         ### Pourquoi ce dashboard ?
         La souveraineté alimentaire de l'Europe dépend à **70% des engrais importés**, dont une large part du gaz naturel (Russie, Moyen-Orient).  
-        Toute tension géopolitique (Iran/Israël, guerre en Ukraine) fait flamber le prix du gaz... et donc le prix des engrais, menaçant nos récoltes.
+        Toute tension géopolitique faisant flamber le prix du gaz... impact donc le prix des engrais, menaçant les récoltes Européennes.
         
         ### Comment ça fonctionne ?
         - **Données boursières** : Récupérées chaque jour via Yahoo Finance pour 6 géants européens des fertilisants.
@@ -770,6 +770,7 @@ with tab5:
         mask_comm = (df_commodities.index.date >= start_date) & (df_commodities.index.date <= end_date)
         df_comm_filtre = df_commodities.loc[mask_comm]
         
+        # CORRECTION : S'assurer que les colonnes sont bien équilibrées
         col1, col2 = st.columns(2)
         
         with col1:
@@ -786,8 +787,11 @@ with tab5:
                     if len(gaz_data) > 0:
                         gaz_recent = gaz_data.tail(30).mean()
                         gaz_moyenne_hist = gaz_data.mean()
-                        gaz_score = 50 + (gaz_recent / gaz_moyenne_hist - 1) * 40
-                        gaz_score = max(0, min(100, gaz_score))
+                        if gaz_moyenne_hist > 0:
+                            gaz_score = 50 + (gaz_recent / gaz_moyenne_hist - 1) * 40
+                            gaz_score = max(0, min(100, gaz_score))
+                        else:
+                            gaz_score = 50
                     else:
                         gaz_score = 50
                     
@@ -801,9 +805,12 @@ with tab5:
                             ratio = ble_data.loc[common_idx] / yara_data.loc[common_idx]
                             ratio_recent = ratio.tail(30).mean()
                             ratio_moyenne = ratio.mean()
-                            # Ratio bas = stress élevé (agriculteurs en difficulté)
-                            ratio_score = 50 - (ratio_recent / ratio_moyenne - 1) * 30
-                            ratio_score = max(0, min(100, ratio_score))
+                            if ratio_moyenne > 0:
+                                # Ratio bas = stress élevé (agriculteurs en difficulté)
+                                ratio_score = 50 - (ratio_recent / ratio_moyenne - 1) * 30
+                                ratio_score = max(0, min(100, ratio_score))
+                            else:
+                                ratio_score = 50
                         else:
                             ratio_score = 50
                     else:
@@ -813,7 +820,7 @@ with tab5:
                     if 'Yara (Norvège)' in df_prices_filtre.columns:
                         yara_vol = df_prices_filtre['Yara (Norvège)'].pct_change().std() * np.sqrt(252) * 100
                         # Volatilité > 30% = stress élevé
-                        vol_score = min(100, yara_vol * 2)
+                        vol_score = min(100, yara_vol * 2) if not pd.isna(yara_vol) else 50
                     else:
                         vol_score = 50
                     
@@ -855,7 +862,7 @@ with tab5:
                 st.error(" **Stress élevé** : Risque important sur la souveraineté alimentaire européenne.")
         
         with col2:
-            st.subheader(" Délai de Transmission estimé")
+            st.subheader("⏱️ Délai de Transmission estimé")
             st.markdown('<div class="plot-explanation">Corrélation croisée entre le prix du Gaz et l\'action Yara (proxy des engrais), décalée dans le temps.</div>', unsafe_allow_html=True)
             
             # Calcul du délai optimal via corrélation croisée
@@ -883,7 +890,6 @@ with tab5:
                             corr = gaz_ret_aligned.corr(yara_ret_aligned)
                         else:
                             # Gaz décalé de 'lag' jours vs Yara
-                            # On compare gaz(t-lag) avec yara(t)
                             corr = gaz_ret_aligned.iloc[:-lag].corr(yara_ret_aligned.iloc[lag:])
                         correlations.append(corr if not pd.isna(corr) else 0)
                     
@@ -908,30 +914,30 @@ with tab5:
                             value=f"{best_lag} jours"
                         )
                     
-                    # Interprétation avec gestion du NaN
+                    # CORRECTION 1 : Logique conditionnelle réorganisée pour le cas best_lag == 0
                     if pd.isna(best_corr) or abs(best_corr) < 0.1:
                         interpretation = """
-                        ⚠️ **Corrélation faible ou inexistante**  
+                         **Corrélation faible ou inexistante**  
                         La relation entre le gaz et Yara n'est pas linéaire sur cette période.
                         Cela peut indiquer que d'autres facteurs (géopolitiques, saisonniers) 
                         dominent actuellement le marché.
                         """
                     elif best_lag == 0:
                         interpretation = """
-                        📖 **Interprétation** : La corrélation maximale est observée **sans décalage**.  
+                         **Interprétation** : La corrélation maximale est observée **sans décalage**.  
                         Le marché des engrais (Yara) réagit quasi-instantanément aux variations du prix du gaz.  
                         Cela peut indiquer une forte efficience du marché ou une période d'observation trop courte.
                         """
                     else:
                         direction = "positive" if best_corr > 0 else "négative"
                         interpretation = f"""
-                        📖 **Interprétation** : Une variation du prix du gaz met environ **{mois_estimes:.1f} mois** pour se répercuter significativement sur l'action Yara (proxy des producteurs d'engrais).  
+                         **Interprétation** : Une variation du prix du gaz met environ **{mois_estimes:.1f} mois** pour se répercuter significativement sur l'action Yara (proxy des producteurs d'engrais).  
                         La corrélation est **{direction} ({best_corr:.2f})**.  
                         
                         Ce délai reflète le temps de transmission des coûts de production aux marchés financiers.
                         """
                     
-                    # Affichage avec unsafe_allow_html=True pour interpréter correctement le HTML
+                    # CORRECTION 2 : Ajout de unsafe_allow_html=True
                     st.markdown(f"""
                     <div style="background-color: #F8F9FA; padding: 15px; border-radius: 8px; margin-top: 10px; color: #2C3E50;">
                         {interpretation}
@@ -1007,7 +1013,7 @@ with tab5:
             # Statistiques
             ratio_actuel = ratio.iloc[-1]
             ratio_moyen = ratio.mean()
-            variation = ((ratio_actuel / ratio_moyen) - 1) * 100
+            variation = ((ratio_actuel / ratio_moyen) - 1) * 100 if ratio_moyen > 0 else 0
             
             if variation < -10:
                 st.error(f" Le ratio est **{abs(variation):.1f}% inférieur** à sa moyenne historique. Situation critique pour les agriculteurs.")
