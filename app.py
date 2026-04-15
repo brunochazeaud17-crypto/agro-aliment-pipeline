@@ -783,7 +783,7 @@ with tab5:
             le prix du <b>pain, pâtes, viande</b> augmente dans les supermarchés.
         </p>
         <p style="font-size: 1rem; color: #F8F9FA; margin-top: 10px;">
-            ⏱️ <b>Délai constaté</b> : Entre le choc sur le gaz et la hausse en rayon, il se passe généralement <b>6 à 18 mois</b>.
+             <b>Délai constaté</b> : Entre le choc sur le gaz et la hausse en rayon, il se passe généralement <b>6 à 18 mois</b>.
         </p>
     </div>
     """, unsafe_allow_html=True)
