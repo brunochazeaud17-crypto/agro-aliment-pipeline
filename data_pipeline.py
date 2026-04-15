@@ -71,6 +71,31 @@ if not df_news.empty:
     df_news['score_sentiment'] = df_news['title'].apply(calculer_sentiment)
     print(" Analyse de sentiment terminée !")
 
+
+import pandas as pd
+import sqlite3
+
+# URL du fichier CSV public de la FAO
+FAO_FPI_URL = "https://www.fao.org/fileadmin/templates/worldfood/Reports_and_docs/Food_price_indices_data.csv"
+
+def fetch_fao_fpi():
+    """Télécharge l'Indice FAO des prix alimentaires."""
+    print("📥 Téléchargement de l'Indice FAO des prix alimentaires...")
+    try:
+        df_fao = pd.read_csv(FAO_FPI_URL, encoding='ISO-8859-1')
+        # La colonne date est généralement 'Date'
+        df_fao['Date'] = pd.to_datetime(df_fao['Date'])
+        df_fao.set_index('Date', inplace=True)
+        # On sélectionne la colonne 'Food Price Index'
+        df_fao_fpi = df_fao[['Food Price Index']].dropna()
+        print(f"✅ Indice FAO récupéré ! ({len(df_fao_fpi)} mois de données)")
+        return df_fao_fpi
+    except Exception as e:
+        print(f"❌ Erreur lors du téléchargement de l'indice FAO : {e}")
+        return pd.DataFrame()
+
+
+
 # --- 5. SAUVEGARDE DANS LA BASE DE DONNÉES ---
 print("💾 Sauvegarde dans SQLite...")
 conn = sqlite3.connect(DB_NAME)
@@ -89,6 +114,12 @@ if not df_news.empty:
     print("   - Table 'news_sentiment' sauvegardée.")
 else:
     print("   - Aucune actualité à sauvegarder.")
+
+# Sauvegarde indice FAO
+df_fao_fpi = fetch_fao_fpi()
+if not df_fao_fpi.empty:
+    df_fao_fpi.to_sql('fao_fpi', conn, if_exists='replace')
+    print("   - Table 'fao_fpi' sauvegardée.")
 
 conn.close()
 print(" Terminé ! Base de données mise à jour avec succès.")
