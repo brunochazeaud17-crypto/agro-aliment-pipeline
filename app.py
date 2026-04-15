@@ -753,18 +753,18 @@ with tab4:
 # ONGLET 5 : IMPACT CONSOMMATEUR & SOUVERAINETÉ
 # ==========================================
 with tab5:
-    st.header("🍞 De la Bourse à l'Assiette : Indicateurs de Souveraineté")
+    st.header(" De la Bourse à l'Assiette : Indicateurs de Souveraineté")
     
     st.markdown("""
     <div class="info-box">
-        <b>🔭 Mécanisme de transmission :</b> Une hausse du prix du gaz → hausse du coût des engrais azotés → 
+        <b> Mécanisme de transmission :</b> Une hausse du prix du gaz → hausse du coût des engrais azotés → 
         baisse des marges des agriculteurs → réduction des surfaces cultivées ou des rendements → 
         hausse des prix alimentaires (délai estimé : 6-12 mois).
     </div>
     """, unsafe_allow_html=True)
 
     if df_commodities.empty:
-        st.warning("⚠️ Données des matières premières non disponibles.")
+        st.warning(" Données des matières premières non disponibles.")
     else:
         # Filtrage sur la période sélectionnée
         mask_comm = (df_commodities.index.date >= start_date) & (df_commodities.index.date <= end_date)
@@ -773,7 +773,7 @@ with tab5:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("📊 Score de Stress Alimentaire")
+            st.subheader(" Score de Stress Alimentaire")
             st.markdown('<div class="plot-explanation">Indicateur composite calculé à partir des données réelles : Prix du Gaz (40%), Volatilité de Yara (30%), Ratio Blé/Engrais (30%).</div>', unsafe_allow_html=True)
             
             # Calcul du score composite basé sur les données RÉELLES
@@ -848,15 +848,15 @@ with tab5:
             
             # Interprétation
             if score_stress < 40:
-                st.success("✅ **Stress faible** : Les conditions de marché sont favorables aux agriculteurs européens.")
+                st.success(" **Stress faible** : Les conditions de marché sont favorables aux agriculteurs européens.")
             elif score_stress < 70:
-                st.warning("⚠️ **Stress modéré** : Des tensions apparaissent, surveillance recommandée.")
+                st.warning(" **Stress modéré** : Des tensions apparaissent, surveillance recommandée.")
             else:
-                st.error("🚨 **Stress élevé** : Risque important sur la souveraineté alimentaire européenne.")
+                st.error(" **Stress élevé** : Risque important sur la souveraineté alimentaire européenne.")
         
         with col2:
-            st.subheader("⏱️ Délai de Transmission estimé")
-            st.markdown('<div class="plot-explanation">Corrélation croisée entre le prix du Gaz et l\'action Yara, décalée dans le temps.</div>', unsafe_allow_html=True)
+            st.subheader(" Délai de Transmission estimé")
+            st.markdown('<div class="plot-explanation">Corrélation croisée entre le prix du Gaz et l\'action Yara (proxy des engrais), décalée dans le temps.</div>', unsafe_allow_html=True)
             
             # Calcul du délai optimal via corrélation croisée
             if 'Gaz_Nat_EU' in df_comm_filtre.columns and 'Yara (Norvège)' in df_prices_filtre.columns:
@@ -900,7 +900,7 @@ with tab5:
                         st.metric(
                             label="Délai de transmission optimal",
                             value=f"{mois_estimes:.1f} mois",
-                            delta=f"Corrélation : {best_corr:.2f}" if not pd.isna(best_corr) else "Corrélation : N/A"
+                            delta=f"Corrélation : {best_corr:.2f}" if not pd.isna(best_corr) else None
                         )
                     with col_b:
                         st.metric(
@@ -911,26 +911,31 @@ with tab5:
                     # Interprétation avec gestion du NaN
                     if pd.isna(best_corr) or abs(best_corr) < 0.1:
                         interpretation = """
-                        <b> Corrélation faible ou inexistante</b><br>
+                         **Corrélation faible ou inexistante**  
                         La relation entre le gaz et Yara n'est pas linéaire sur cette période.
                         Cela peut indiquer que d'autres facteurs (géopolitiques, saisonniers) 
                         dominent actuellement le marché.
                         """
+                    elif best_lag == 0:
+                        interpretation = """
+                         **Interprétation** : La corrélation maximale est observée **sans décalage**.
+                        Le marché des engrais (Yara) réagit quasi-instantanément aux variations du prix du gaz.
+                        Cela peut indiquer une forte efficience du marché ou une période d'observation trop courte.
+                        """
                     else:
                         direction = "positive" if best_corr > 0 else "négative"
                         interpretation = f"""
-                        <b> Interprétation :</b> Une variation du prix du gaz met environ 
-                        <b>{mois_estimes:.1f} mois</b> pour se répercuter significativement 
-                        sur l'action des angrais (Yara). 
-                        La corrélation est <b>{direction} ({best_corr:.2f})</b>.
-                        <br><br>
+                         **Interprétation** : Une variation du prix du gaz met environ 
+                        **{mois_estimes:.1f} mois** pour se répercuter significativement 
+                        sur l'action Yara (proxy des producteurs d'engrais). 
+                        La corrélation est **{direction} ({best_corr:.2f})**.
+                        
                         Ce délai reflète le temps de transmission des coûts de production 
-                        aux marchés financiers. Il est calculé dynamiquement à partir des 
-                        données réelles via corrélation croisée.
+                        aux marchés financiers.
                         """
                     
                     st.markdown(f"""
-                    <div style="background-color: #F8F9FA; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                    <div style="background-color: #F8F9FA; padding: 15px; border-radius: 8px; margin-top: 10px; color: #2C3E50;">
                         {interpretation}
                         <br><br>
                         <i>Ce délai est recalculé automatiquement à chaque mise à jour des données.</i>
