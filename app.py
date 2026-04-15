@@ -911,29 +911,27 @@ with tab5:
                     # Interprétation avec gestion du NaN
                     if pd.isna(best_corr) or abs(best_corr) < 0.1:
                         interpretation = """
-                         **Corrélation faible ou inexistante**  
+                        ⚠️ **Corrélation faible ou inexistante**  
                         La relation entre le gaz et Yara n'est pas linéaire sur cette période.
                         Cela peut indiquer que d'autres facteurs (géopolitiques, saisonniers) 
                         dominent actuellement le marché.
                         """
                     elif best_lag == 0:
                         interpretation = """
-                         **Interprétation** : La corrélation maximale est observée **sans décalage**.
-                        Le marché des engrais (Yara) réagit quasi-instantanément aux variations du prix du gaz.
+                        📖 **Interprétation** : La corrélation maximale est observée **sans décalage**.  
+                        Le marché des engrais (Yara) réagit quasi-instantanément aux variations du prix du gaz.  
                         Cela peut indiquer une forte efficience du marché ou une période d'observation trop courte.
                         """
                     else:
                         direction = "positive" if best_corr > 0 else "négative"
                         interpretation = f"""
-                         **Interprétation** : Une variation du prix du gaz met environ 
-                        **{mois_estimes:.1f} mois** pour se répercuter significativement 
-                        sur l'action Yara (proxy des producteurs d'engrais). 
-                        La corrélation est **{direction} ({best_corr:.2f})**.
+                        📖 **Interprétation** : Une variation du prix du gaz met environ **{mois_estimes:.1f} mois** pour se répercuter significativement sur l'action Yara (proxy des producteurs d'engrais).  
+                        La corrélation est **{direction} ({best_corr:.2f})**.  
                         
-                        Ce délai reflète le temps de transmission des coûts de production 
-                        aux marchés financiers.
+                        Ce délai reflète le temps de transmission des coûts de production aux marchés financiers.
                         """
                     
+                    # Affichage avec unsafe_allow_html=True pour interpréter correctement le HTML
                     st.markdown(f"""
                     <div style="background-color: #F8F9FA; padding: 15px; border-radius: 8px; margin-top: 10px; color: #2C3E50;">
                         {interpretation}
