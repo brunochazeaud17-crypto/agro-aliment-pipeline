@@ -144,7 +144,6 @@ if not df_fao_fpi.empty:
     print("   - Table 'fao_fpi' sauvegardée.")
 
 # Sauvegarde stock céréale
-df_stocks = fetch_usda_stocks()
 if not df_stocks.empty:
     df_stocks.to_sql('usda_stocks', conn, if_exists='replace')
     print("   - Table 'usda_stocks' sauvegardée.")
