@@ -5,6 +5,7 @@ import sqlite3
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import os
+from openbb import obb
 
 # --- CONFIGURATION ---
 API_KEY = os.environ.get("NEWS_API_KEY")
@@ -95,6 +96,33 @@ def fetch_fao_fpi():
         return pd.DataFrame()
 
 
+# Ajoute cette importation en haut du fichier
+from openbb import obb
+
+def fetch_usda_stocks():
+    """Récupère les stocks de maïs et de blé depuis l'USDA PSD."""
+    print("📦 Récupération des stocks céréaliers (USDA)...")
+    try:
+        # Exemple pour le maïs (corn)
+        df_corn = obb.commodity.psd_data(commodity='corn', country='world', attribute='ending_stocks', start_year=2020)
+        df_corn['Date'] = pd.to_datetime(df_corn['date'])
+        df_corn = df_corn[['Date', 'value']].rename(columns={'value': 'corn_stocks'})
+        df_corn.set_index('Date', inplace=True)
+        
+        # Exemple pour le blé (wheat)
+        df_wheat = obb.commodity.psd_data(commodity='wheat', country='world', attribute='ending_stocks', start_year=2020)
+        df_wheat['Date'] = pd.to_datetime(df_wheat['date'])
+        df_wheat = df_wheat[['Date', 'value']].rename(columns={'value': 'wheat_stocks'})
+        df_wheat.set_index('Date', inplace=True)
+        
+        # Fusion des données
+        df_stocks = pd.merge(df_corn, df_wheat, left_index=True, right_index=True, how='outer')
+        print(f"✅ Stocks USDA récupérés ! ({len(df_stocks)} années de données)")
+        return df_stocks
+    except Exception as e:
+        print(f"❌ Erreur lors de la récupération des stocks USDA : {e}")
+        return pd.DataFrame()
+
 
 # --- 5. SAUVEGARDE DANS LA BASE DE DONNÉES ---
 print("💾 Sauvegarde dans SQLite...")
@@ -120,6 +148,12 @@ df_fao_fpi = fetch_fao_fpi()
 if not df_fao_fpi.empty:
     df_fao_fpi.to_sql('fao_fpi', conn, if_exists='replace')
     print("   - Table 'fao_fpi' sauvegardée.")
+
+# Sauvegarde stock céréale
+df_stocks = fetch_usda_stocks()
+if not df_stocks.empty:
+    df_stocks.to_sql('usda_stocks', conn, if_exists='replace')
+    print("   - Table 'usda_stocks' sauvegardée.")
 
 conn.close()
 print(" Terminé ! Base de données mise à jour avec succès.")
