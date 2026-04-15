@@ -754,7 +754,7 @@ with tab5:
     
     st.markdown("""
     <div class="info-box">
-        <b>🔭 Projection Macro :</b> Un choc de +10% sur les prix des engrais (Actions Yara/OCI) met environ 6 à 9 mois 
+        <b> Projection Macro :</b> Un choc de +10% sur les prix des engrais (Actions Yara/OCI) met environ 6 à 9 mois 
         pour se répercuter sur le prix de la baguette ou des pâtes dans les supermarchés européens.
     </div>
     """, unsafe_allow_html=True)
