@@ -7,17 +7,13 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import os
 
 # --- CONFIGURATION ---
-
-# --- CONFIGURATION ---
-# On demande à Python d'aller chercher la clé dans les variables d'environnement
 API_KEY = os.environ.get("NEWS_API_KEY")
 DB_NAME = "agri_data.db"
 
-# Petite sécurité
 if not API_KEY:
     raise ValueError("🚨 AUCUNE CLÉ API TROUVÉE ! Vérifie tes secrets GitHub ou ton environnement local.")
 
-# --- 1. COLLECTE DES PRIX (yfinance) ---
+# --- 1. COLLECTE DES PRIX DES ACTIONS (yfinance) ---
 print("📥 Téléchargement des données boursières...")
 tickers = {
     "Yara (Norvège)": "YAR.OL",
@@ -31,9 +27,20 @@ tickers = {
 df_prices = yf.download(list(tickers.values()), start="2022-01-01", interval="1d")['Close']
 inv_tickers = {v: k for k, v in tickers.items()}
 df_prices.rename(columns=inv_tickers, inplace=True)
-print(f"✅ Prix récupérés ! ({len(df_prices)} jours de cotation)")
+print(f"✅ Prix des actions récupérés ! ({len(df_prices)} jours de cotation)")
 
-# --- 2. COLLECTE DES ACTUALITÉS (NewsAPI) ---
+# --- 2. COLLECTE DES MATIÈRES PREMIÈRES (Gaz et Blé) ---
+print("📥 Téléchargement des données des matières premières...")
+commodities_tickers = {
+    "Gaz_Nat_EU": "TTF=F",      # Gaz naturel néerlandais (référence européenne)
+    "Ble_Chicago": "ZW=F"      # Blé (Chicago SRW Wheat Futures)
+}
+
+df_commodities = yf.download(list(commodities_tickers.values()), start="2022-01-01", interval="1d")['Close']
+df_commodities.rename(columns={v: k for k, v in commodities_tickers.items()}, inplace=True)
+print(f"✅ Matières premières récupérées ! ({len(df_commodities)} jours de cotation)")
+
+# --- 3. COLLECTE DES ACTUALITÉS (NewsAPI) ---
 print("📰 Récupération des articles de presse...")
 query = '("fertilizer" OR "agriculture") AND ("Europe" OR "gas" OR "Middle East" OR "Iran")'
 url = f"https://newsapi.org/v2/everything?q={query}&language=en&sortBy=relevancy&apiKey={API_KEY}"
@@ -45,15 +52,15 @@ if data.get('status') == 'ok':
     articles = data['articles']
     df_news = pd.DataFrame(articles)[['publishedAt', 'title', 'description', 'source']]
     df_news['source'] = df_news['source'].apply(lambda x: x.get('name') if isinstance(x, dict) else x)
-    print(f"✅ Actualités récupérées ! ({len(df_news)} articles)")
+    print(f" Actualités récupérées ! ({len(df_news)} articles)")
 else:
     print("❌ Erreur NewsAPI :", data.get('message'))
-    df_news = pd.DataFrame() # DataFrame vide pour éviter les bugs si ça plante
+    df_news = pd.DataFrame()
 
-# --- 3. ANALYSE DE SENTIMENT (NLP) ---
+# --- 4. ANALYSE DE SENTIMENT (NLP) ---
 if not df_news.empty:
     print("🧠 Analyse du sentiment des titres...")
-    nltk.download('vader_lexicon', quiet=True) # quiet=True pour ne pas polluer l'écran
+    nltk.download('vader_lexicon', quiet=True)
     sia = SentimentIntensityAnalyzer()
 
     def calculer_sentiment(texte):
@@ -62,18 +69,26 @@ if not df_news.empty:
         return sia.polarity_scores(str(texte))['compound']
 
     df_news['score_sentiment'] = df_news['title'].apply(calculer_sentiment)
-    print("✅ Analyse de sentiment terminée !")
+    print(" Analyse de sentiment terminée !")
 
-# --- 4. SAUVEGARDE DANS LA BASE DE DONNÉES ---
+# --- 5. SAUVEGARDE DANS LA BASE DE DONNÉES ---
 print("💾 Sauvegarde dans SQLite...")
 conn = sqlite3.connect(DB_NAME)
 
-# On sauvegarde les prix
+# Sauvegarde des prix des actions
 df_prices.to_sql('stock_prices', conn, if_exists='replace')
+print("   - Table 'stock_prices' sauvegardée.")
 
-# On sauvegarde les news (si on en a)
+# Sauvegarde des matières premières
+df_commodities.to_sql('commodity_prices', conn, if_exists='replace')
+print("   - Table 'commodity_prices' sauvegardée.")
+
+# Sauvegarde des news (si on en a)
 if not df_news.empty:
     df_news.to_sql('news_sentiment', conn, if_exists='replace', index=False)
+    print("   - Table 'news_sentiment' sauvegardée.")
+else:
+    print("   - Aucune actualité à sauvegarder.")
 
 conn.close()
-print("🎉 Terminé ! Base de données mise à jour avec succès.")
+print(" Terminé ! Base de données mise à jour avec succès.")
