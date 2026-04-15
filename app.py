@@ -753,28 +753,27 @@ with tab4:
 # ONGLET 5 : IMPACT CONSOMMATEUR & SOUVERAINETÉ
 # ==========================================
 with tab5:
-    st.header(" De la Bourse à l'Assiette : Indicateurs de Souveraineté")
+    st.header("🍞 De la Bourse à l'Assiette : Indicateurs de Souveraineté")
     
     st.markdown("""
     <div class="info-box">
-        <b> Mécanisme de transmission :</b> Une hausse du prix du gaz → hausse du coût des engrais azotés → 
+        <b>📊 Mécanisme de transmission :</b> Une hausse du prix du gaz → hausse du coût des engrais azotés → 
         baisse des marges des agriculteurs → réduction des surfaces cultivées ou des rendements → 
         hausse des prix alimentaires (délai estimé : 6-12 mois).
     </div>
     """, unsafe_allow_html=True)
 
     if df_commodities.empty:
-        st.warning(" Données des matières premières non disponibles.")
+        st.warning("⚠️ Données des matières premières non disponibles.")
     else:
         # Filtrage sur la période sélectionnée
         mask_comm = (df_commodities.index.date >= start_date) & (df_commodities.index.date <= end_date)
         df_comm_filtre = df_commodities.loc[mask_comm]
         
-        # CORRECTION : S'assurer que les colonnes sont bien équilibrées
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader(" Score de Stress Alimentaire")
+            st.subheader("📈 Score de Stress Alimentaire")
             st.markdown('<div class="plot-explanation">Indicateur composite calculé à partir des données réelles : Prix du Gaz (40%), Volatilité de Yara (30%), Ratio Blé/Engrais (30%).</div>', unsafe_allow_html=True)
             
             # Calcul du score composite basé sur les données RÉELLES
@@ -806,7 +805,6 @@ with tab5:
                             ratio_recent = ratio.tail(30).mean()
                             ratio_moyenne = ratio.mean()
                             if ratio_moyenne > 0:
-                                # Ratio bas = stress élevé (agriculteurs en difficulté)
                                 ratio_score = 50 - (ratio_recent / ratio_moyenne - 1) * 30
                                 ratio_score = max(0, min(100, ratio_score))
                             else:
@@ -819,7 +817,6 @@ with tab5:
                     # 3. Composante Volatilité de Yara
                     if 'Yara (Norvège)' in df_prices_filtre.columns:
                         yara_vol = df_prices_filtre['Yara (Norvège)'].pct_change().std() * np.sqrt(252) * 100
-                        # Volatilité > 30% = stress élevé
                         vol_score = min(100, yara_vol * 2) if not pd.isna(yara_vol) else 50
                     else:
                         vol_score = 50
@@ -839,9 +836,9 @@ with tab5:
                     'axis': {'range': [0, 100]},
                     'bar': {'color': "#2C3E50"},
                     'steps': [
-                        {'range': [0, 40], 'color': '#27AE60'},    # Vert : situation favorable
-                        {'range': [40, 70], 'color': '#F1C40F'},    # Jaune : vigilance
-                        {'range': [70, 100], 'color': '#E74C3C'}    # Rouge : tension
+                        {'range': [0, 40], 'color': '#27AE60'},
+                        {'range': [40, 70], 'color': '#F1C40F'},
+                        {'range': [70, 100], 'color': '#E74C3C'}
                     ],
                     'threshold': {
                         'line': {'color': "red", 'width': 4},
@@ -855,14 +852,14 @@ with tab5:
             
             # Interprétation
             if score_stress < 40:
-                st.success(" **Stress faible** : Les conditions de marché sont favorables aux agriculteurs européens.")
+                st.success("✅ **Stress faible** : Les conditions de marché sont favorables aux agriculteurs européens.")
             elif score_stress < 70:
-                st.warning(" **Stress modéré** : Des tensions apparaissent, surveillance recommandée.")
+                st.warning("⚠️ **Stress modéré** : Des tensions apparaissent, surveillance recommandée.")
             else:
-                st.error(" **Stress élevé** : Risque important sur la souveraineté alimentaire européenne.")
+                st.error("🚨 **Stress élevé** : Risque important sur la souveraineté alimentaire européenne.")
         
         with col2:
-            st.subheader(" Délai de Transmission estimé")
+            st.subheader("⏱️ Délai de Transmission estimé")
             st.markdown('<div class="plot-explanation">Corrélation croisée entre le prix du Gaz et l\'action Yara (proxy des engrais), décalée dans le temps.</div>', unsafe_allow_html=True)
             
             # Calcul du délai optimal via corrélation croisée
@@ -881,25 +878,39 @@ with tab5:
                     gaz_ret_aligned = gaz_returns.loc[common_returns_idx]
                     yara_ret_aligned = yara_returns.loc[common_returns_idx]
                     
-                    # Calcul des corrélations pour différents décalages (en jours ouvrés)
+                    # Initialisation des listes pour stocker les corrélations
                     correlations = []
-                    max_lag = min(90, len(gaz_ret_aligned) // 3)  # Maximum 90 jours ou 1/3 des données
+                    lag_values = []
                     
-                    for lag in range(0, max_lag + 1):
-                        if lag == 0:
-                            corr = gaz_ret_aligned.corr(yara_ret_aligned)
+                    # Calcul des corrélations pour différents décalages
+                    # CORRECTION : On teste les décalages NÉGATIFS (Gaz AVANT Yara) et POSITIFS (Gaz APRÈS Yara)
+                    max_lag = min(90, len(gaz_ret_aligned) // 3)
+                    
+                    for lag in range(-max_lag, max_lag + 1):
+                        if lag < 0:
+                            # Gaz en avance sur Yara (lag négatif) : on décale Yara
+                            # On compare gaz(t) avec yara(t + |lag|)
+                            abs_lag = abs(lag)
+                            corr = gaz_ret_aligned.iloc[:-abs_lag].corr(yara_ret_aligned.iloc[abs_lag:])
+                        elif lag > 0:
+                            # Yara en avance sur Gaz (lag positif) : on décale Gaz
+                            # On compare gaz(t + lag) avec yara(t)
+                            corr = gaz_ret_aligned.iloc[lag:].corr(yara_ret_aligned.iloc[:-lag])
                         else:
-                            # Gaz décalé de 'lag' jours vs Yara
-                            corr = gaz_ret_aligned.iloc[:-lag].corr(yara_ret_aligned.iloc[lag:])
+                            # lag == 0 : corrélation instantanée
+                            corr = gaz_ret_aligned.corr(yara_ret_aligned)
+                        
                         correlations.append(corr if not pd.isna(corr) else 0)
+                        lag_values.append(lag)
                     
                     # Trouver le lag avec la corrélation maximale (en valeur absolue)
                     correlations_abs = [abs(c) for c in correlations]
-                    best_lag = np.argmax(correlations_abs)
-                    best_corr = correlations[best_lag]
+                    best_idx = np.argmax(correlations_abs)
+                    best_lag = lag_values[best_idx]
+                    best_corr = correlations[best_idx]
                     
                     # Conversion en mois ouvrés (21 jours = 1 mois)
-                    mois_estimes = best_lag / 21
+                    mois_estimes = abs(best_lag) / 21
                     
                     col_a, col_b = st.columns(2)
                     with col_a:
@@ -909,12 +920,14 @@ with tab5:
                             delta=f"Corrélation : {best_corr:.2f}" if not pd.isna(best_corr) else None
                         )
                     with col_b:
+                        direction_lag = "Gaz précède Yara" if best_lag > 0 else ("Yara précède Gaz" if best_lag < 0 else "Instantané")
                         st.metric(
-                            label="Nombre de jours ouvrés",
-                            value=f"{best_lag} jours"
+                            label="Sens du décalage",
+                            value=direction_lag,
+                            delta=f"Lag = {best_lag} jours"
                         )
                     
-                    # CORRECTION COMPLÈTE DE LA LOGIQUE DU DÉLAI DE TRANSMISSION
+                    # Interprétation avec conditions dans le bon ordre
                     if pd.isna(best_corr) or abs(best_corr) < 0.1:
                         interpretation = """
                         ⚠️ **Corrélation faible ou inexistante**  
@@ -923,25 +936,31 @@ with tab5:
                         dominent actuellement le marché.
                         """
                     elif best_lag == 0:
-                        # Ce bloc doit s'exécuter quand best_lag == 0 ET corrélation >= 0.1
-                        interpretation = """
-                        📖 **Interprétation** : La corrélation maximale est observée **sans décalage**.  
+                        interpretation = f"""
+                        📖 **Interprétation** : La corrélation maximale ({best_corr:.2f}) est observée **sans décalage**.  
                         Le marché des engrais (Yara) réagit quasi-instantanément aux variations du prix du gaz.  
                         Cela peut indiquer une forte efficience du marché ou une période d'observation trop courte.
                         """
-                    else:
+                    elif best_lag > 0:
                         direction = "positive" if best_corr > 0 else "négative"
                         interpretation = f"""
-                        📖 **Interprétation** : Une variation du prix du gaz met environ **{mois_estimes:.1f} mois** pour se répercuter significativement sur l'action Yara (proxy des producteurs d'engrais).  
+                        📖 **Interprétation** : Une variation du prix du gaz met environ **{mois_estimes:.1f} mois** pour se répercuter significativement sur l'action Yara.  
+                        Le Gaz **précède** Yara de **{best_lag} jours ouvrés**.  
                         La corrélation est **{direction} ({best_corr:.2f})**.  
                         
                         Ce délai reflète le temps de transmission des coûts de production aux marchés financiers.
                         """
+                    else:  # best_lag < 0
+                        direction = "positive" if best_corr > 0 else "négative"
+                        interpretation = f"""
+                        📖 **Interprétation** : Contre-intuitivement, c'est Yara qui **précède** le Gaz de **{abs(best_lag)} jours ouvrés**.  
+                        La corrélation est **{direction} ({best_corr:.2f})**.  
+                        
+                        Cela peut indiquer que le marché anticipe les tensions sur le gaz ou que d'autres facteurs 
+                        (spéculation, saisonnalité) dominent la relation.
+                        """
                     
-                    # DÉBOGAGE : Afficher les valeurs pour comprendre pourquoi la condition ne fonctionne pas
-                    st.caption(f"🔍 Débogage : best_lag = {best_lag}, best_corr = {best_corr:.4f}, abs(best_corr) = {abs(best_corr):.4f}")
-                    
-                    # CORRECTION : Ajout de unsafe_allow_html=True
+                    # Affichage avec unsafe_allow_html=True
                     st.markdown(f"""
                     <div style="background-color: #F8F9FA; padding: 15px; border-radius: 8px; margin-top: 10px; color: #2C3E50;">
                         {interpretation}
@@ -951,23 +970,59 @@ with tab5:
                     """, unsafe_allow_html=True)
                     
                     # Optionnel : Afficher le graphique des corrélations par lag
-                    with st.expander(" Voir le détail des corrélations par décalage"):
+                    with st.expander("📊 Voir le détail des corrélations par décalage"):
                         fig_lags = go.Figure()
+                        
+                        # Barres pour les corrélations
+                        colors = ['#E74C3C' if c < 0 else '#27AE60' for c in correlations]
                         fig_lags.add_trace(go.Bar(
-                            x=list(range(len(correlations))),
+                            x=lag_values,
                             y=correlations,
-                            marker_color=['#E74C3C' if c < 0 else '#27AE60' for c in correlations],
-                            name='Corrélation'
+                            marker_color=colors,
+                            name='Corrélation',
+                            text=[f"{c:.3f}" for c in correlations],
+                            textposition='outside'
                         ))
-                        fig_lags.add_vline(x=best_lag, line_dash="dash", line_color="blue", 
-                                          annotation_text=f"Optimal: {best_lag} jours")
+                        
+                        # Ligne verticale au lag optimal
+                        fig_lags.add_vline(
+                            x=best_lag, 
+                            line_dash="dash", 
+                            line_color="blue", 
+                            annotation_text=f"Optimal: {best_lag} jours",
+                            annotation_position="top"
+                        )
+                        
+                        # Ligne horizontale à 0
+                        fig_lags.add_hline(y=0, line_dash="solid", line_color="gray", opacity=0.5)
+                        
                         fig_lags.update_layout(
                             title="Corrélation Gaz vs Yara par décalage (jours ouvrés)",
-                            xaxis_title="Décalage (jours)",
+                            xaxis_title="Décalage en jours (négatif = Yara précède Gaz, positif = Gaz précède Yara)",
                             yaxis_title="Corrélation",
-                            height=250
+                            height=350,
+                            showlegend=False,
+                            bargap=0.1
                         )
                         st.plotly_chart(fig_lags, use_container_width=True)
+                        
+                        # Tableau récapitulatif des meilleures corrélations
+                        st.caption("📋 **Top 5 des meilleurs décalages :**")
+                        correlations_with_lag = list(zip(lag_values, correlations, correlations_abs))
+                        correlations_with_lag.sort(key=lambda x: x[2], reverse=True)
+                        
+                        top5_data = []
+                        for lag, corr, abs_corr in correlations_with_lag[:5]:
+                            sens = "Gaz → Yara" if lag > 0 else ("Yara → Gaz" if lag < 0 else "Instantané")
+                            top5_data.append({
+                                "Décalage (jours)": lag,
+                                "Sens": sens,
+                                "Corrélation": f"{corr:.3f}",
+                                "|Corr|": f"{abs_corr:.3f}"
+                            })
+                        
+                        df_top5 = pd.DataFrame(top5_data)
+                        st.dataframe(df_top5, use_container_width=True, hide_index=True)
                         
                 else:
                     st.info("Données insuffisantes pour calculer le délai de transmission (minimum 60 jours requis).")
@@ -976,7 +1031,7 @@ with tab5:
     
     st.divider()
     
-    st.subheader(" Évolution du Ratio Blé / Engrais")
+    st.subheader("📉 Évolution du Ratio Blé / Engrais")
     st.markdown('<div class="plot-explanation">Ce ratio mesure le pouvoir d\'achat des agriculteurs : quantité de blé nécessaire pour "acheter" une unité d\'engrais (proxy via l\'action Yara). Quand le ratio baisse, la rentabilité agricole se dégrade.</div>', unsafe_allow_html=True)
     
     if not df_commodities.empty and 'Ble_Chicago' in df_commodities.columns and 'Yara (Norvège)' in df_prices_filtre.columns:
@@ -1020,11 +1075,11 @@ with tab5:
             variation = ((ratio_actuel / ratio_moyen) - 1) * 100 if ratio_moyen > 0 else 0
             
             if variation < -10:
-                st.error(f" Le ratio est **{abs(variation):.1f}% inférieur** à sa moyenne historique. Situation critique pour les agriculteurs.")
+                st.error(f"📉 Le ratio est **{abs(variation):.1f}% inférieur** à sa moyenne historique. Situation critique pour les agriculteurs.")
             elif variation < 0:
-                st.warning(f" Le ratio est **{abs(variation):.1f}% inférieur** à sa moyenne historique.")
+                st.warning(f"📊 Le ratio est **{abs(variation):.1f}% inférieur** à sa moyenne historique.")
             else:
-                st.success(f" Le ratio est **{variation:.1f}% supérieur** à sa moyenne historique.")
+                st.success(f"📈 Le ratio est **{variation:.1f}% supérieur** à sa moyenne historique.")
         else:
             st.info("Pas de dates communes entre le Blé et Yara.")
     else:
@@ -1035,5 +1090,5 @@ with tab5:
     **Méthodologie :** Tous les indicateurs de cet onglet sont calculés à partir des données réelles 
     mises à jour quotidiennement via Yahoo Finance (Gaz TTF, Blé Chicago, actions). 
     Le Score de Stress est un indicateur composite pondéré. 
-    Le délai de transmission est calculé par corrélation croisée dynamique.
+    Le délai de transmission est calculé par corrélation croisée dynamique avec des décalages positifs et négatifs.
     """)
