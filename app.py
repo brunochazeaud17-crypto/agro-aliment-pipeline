@@ -862,7 +862,7 @@ with tab5:
                 st.error(" **Stress élevé** : Risque important sur la souveraineté alimentaire européenne.")
         
         with col2:
-            st.subheader("⏱️ Délai de Transmission estimé")
+            st.subheader(" Délai de Transmission estimé")
             st.markdown('<div class="plot-explanation">Corrélation croisée entre le prix du Gaz et l\'action Yara (proxy des engrais), décalée dans le temps.</div>', unsafe_allow_html=True)
             
             # Calcul du délai optimal via corrélation croisée
@@ -914,30 +914,34 @@ with tab5:
                             value=f"{best_lag} jours"
                         )
                     
-                    # CORRECTION 1 : Logique conditionnelle réorganisée pour le cas best_lag == 0
+                    # CORRECTION COMPLÈTE DE LA LOGIQUE DU DÉLAI DE TRANSMISSION
                     if pd.isna(best_corr) or abs(best_corr) < 0.1:
                         interpretation = """
-                         **Corrélation faible ou inexistante**  
+                        ⚠️ **Corrélation faible ou inexistante**  
                         La relation entre le gaz et Yara n'est pas linéaire sur cette période.
                         Cela peut indiquer que d'autres facteurs (géopolitiques, saisonniers) 
                         dominent actuellement le marché.
                         """
                     elif best_lag == 0:
+                        # Ce bloc doit s'exécuter quand best_lag == 0 ET corrélation >= 0.1
                         interpretation = """
-                         **Interprétation** : La corrélation maximale est observée **sans décalage**.  
+                        📖 **Interprétation** : La corrélation maximale est observée **sans décalage**.  
                         Le marché des engrais (Yara) réagit quasi-instantanément aux variations du prix du gaz.  
                         Cela peut indiquer une forte efficience du marché ou une période d'observation trop courte.
                         """
                     else:
                         direction = "positive" if best_corr > 0 else "négative"
                         interpretation = f"""
-                         **Interprétation** : Une variation du prix du gaz met environ **{mois_estimes:.1f} mois** pour se répercuter significativement sur l'action Yara (proxy des producteurs d'engrais).  
+                        📖 **Interprétation** : Une variation du prix du gaz met environ **{mois_estimes:.1f} mois** pour se répercuter significativement sur l'action Yara (proxy des producteurs d'engrais).  
                         La corrélation est **{direction} ({best_corr:.2f})**.  
                         
                         Ce délai reflète le temps de transmission des coûts de production aux marchés financiers.
                         """
                     
-                    # CORRECTION 2 : Ajout de unsafe_allow_html=True
+                    # DÉBOGAGE : Afficher les valeurs pour comprendre pourquoi la condition ne fonctionne pas
+                    st.caption(f"🔍 Débogage : best_lag = {best_lag}, best_corr = {best_corr:.4f}, abs(best_corr) = {abs(best_corr):.4f}")
+                    
+                    # CORRECTION : Ajout de unsafe_allow_html=True
                     st.markdown(f"""
                     <div style="background-color: #F8F9FA; padding: 15px; border-radius: 8px; margin-top: 10px; color: #2C3E50;">
                         {interpretation}
