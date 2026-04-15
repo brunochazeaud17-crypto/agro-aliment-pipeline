@@ -901,23 +901,32 @@ with tab5:
         fig_gauge = go.Figure(go.Indicator(
             mode="gauge+number",
             value=score_stress_panier,
-            title={'text': "Stress", 'font': {'size': 14}},
+            title={'text': "Stress", 'font': {'size': 13}},
+            number={'font': {'size': 36}, 'suffix': ""},
             gauge={
-                'axis': {'range': [0, 100], 'tickfont': {'size': 10}},
-                'bar': {'color': "#2C3E50", 'thickness': 0.7},
+                'axis': {'range': [0, 100], 'tickwidth': 1},
+                'bar': {'color': "#2C3E50", 'thickness': 0.75},
+                'bgcolor': "white",
+                'borderwidth': 1,
+                'bordercolor': "#E5E8E8",
                 'steps': [
-                    {'range': [0, 40], 'color': '#27AE60'},
-                    {'range': [40, 70], 'color': '#F1C40F'},
-                    {'range': [70, 100], 'color': '#E74C3C'}
+                    {'range': [0, 40], 'color': '#D5F5E3'},
+                    {'range': [40, 70], 'color': '#FEF9E7'},
+                    {'range': [70, 100], 'color': '#FADBD8'}
                 ],
                 'threshold': {
-                    'line': {'color': "red", 'width': 3},
-                    'thickness': 0.75,
+                    'line': {'color': "#C0392B", 'width': 3},
+                    'thickness': 0.8,
                     'value': 70
                 }
-            }
+            },
+            domain={'x': [0, 1], 'y': [0.15, 1]}  # ← CLEF : recentre la jauge verticalement
         ))
-        fig_gauge.update_layout(height=200, margin=dict(l=20, r=20, t=40, b=10))
+        fig_gauge.update_layout(
+            height=200, 
+            margin=dict(l=15, r=15, t=10, b=5),  # ← Marges réduites
+            paper_bgcolor='rgba(0,0,0,0)'          # ← Fond transparent
+        )
         st.plotly_chart(fig_gauge, use_container_width=True)
         
         # Mini-interprétation
