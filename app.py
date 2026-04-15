@@ -852,111 +852,111 @@ with tab5:
                 st.error(" **Stress élevé** : Risque important sur la souveraineté alimentaire européenne.")
         
         with col2:
-    st.subheader(" Délai de Transmission estimé")
-    st.markdown('<div class="plot-explanation">Corrélation croisée entre le prix du Gaz et l\'action Yara, décalée dans le temps.</div>', unsafe_allow_html=True)
-    
-    # Calcul du délai optimal via corrélation croisée
-    if 'Gaz_Nat_EU' in df_comm_filtre.columns and 'Yara (Norvège)' in df_prices_filtre.columns:
-        gaz_series = df_comm_filtre['Gaz_Nat_EU'].dropna()
-        yara_series = df_prices_filtre['Yara (Norvège)'].dropna()
-        
-        common_idx = gaz_series.index.intersection(yara_series.index)
-        if len(common_idx) > 60:
-            # Calcul des rendements journaliers (variations en %)
-            gaz_returns = gaz_series.loc[common_idx].pct_change().dropna()
-            yara_returns = yara_series.loc[common_idx].pct_change().dropna()
+            st.subheader("⏱️ Délai de Transmission estimé")
+            st.markdown('<div class="plot-explanation">Corrélation croisée entre le prix du Gaz et l\'action Yara, décalée dans le temps.</div>', unsafe_allow_html=True)
             
-            # Réalignement après dropna
-            common_returns_idx = gaz_returns.index.intersection(yara_returns.index)
-            gaz_ret_aligned = gaz_returns.loc[common_returns_idx]
-            yara_ret_aligned = yara_returns.loc[common_returns_idx]
-            
-            # Calcul des corrélations pour différents décalages (en jours ouvrés)
-            correlations = []
-            max_lag = min(90, len(gaz_ret_aligned) // 3)  # Maximum 90 jours ou 1/3 des données
-            
-            for lag in range(0, max_lag + 1):
-                if lag == 0:
-                    corr = gaz_ret_aligned.corr(yara_ret_aligned)
-                else:
-                    # Gaz décalé de 'lag' jours vs Yara
-                    # On compare gaz(t-lag) avec yara(t)
-                    corr = gaz_ret_aligned.iloc[:-lag].corr(yara_ret_aligned.iloc[lag:])
-                correlations.append(corr if not pd.isna(corr) else 0)
-            
-            # Trouver le lag avec la corrélation maximale (en valeur absolue)
-            correlations_abs = [abs(c) for c in correlations]
-            best_lag = np.argmax(correlations_abs)
-            best_corr = correlations[best_lag]
-            
-            # Conversion en mois ouvrés (21 jours = 1 mois)
-            mois_estimes = best_lag / 21
-            
-            col_a, col_b = st.columns(2)
-            with col_a:
-                st.metric(
-                    label="Délai de transmission optimal",
-                    value=f"{mois_estimes:.1f} mois",
-                    delta=f"Corrélation : {best_corr:.2f}" if not pd.isna(best_corr) else "Corrélation : N/A"
-                )
-            with col_b:
-                st.metric(
-                    label="Nombre de jours ouvrés",
-                    value=f"{best_lag} jours"
-                )
-            
-            # Interprétation avec gestion du NaN
-            if pd.isna(best_corr) or abs(best_corr) < 0.1:
-                interpretation = """
-                <b> Corrélation faible ou inexistante</b><br>
-                La relation entre le gaz et Yara n'est pas linéaire sur cette période.
-                Cela peut indiquer que d'autres facteurs (géopolitiques, saisonniers) 
-                dominent actuellement le marché.
-                """
-            else:
-                direction = "positive" if best_corr > 0 else "négative"
-                interpretation = f"""
-                <b> Interprétation :</b> Une variation du prix du gaz met environ 
-                <b>{mois_estimes:.1f} mois</b> pour se répercuter significativement 
-                sur l'action Yara (proxy des producteurs d'engrais). 
-                La corrélation est <b>{direction} ({best_corr:.2f})</b>.
-                <br><br>
-                Ce délai reflète le temps de transmission des coûts de production 
-                aux marchés financiers. Il est calculé dynamiquement à partir des 
-                données réelles via corrélation croisée.
-                """
-            
-            st.markdown(f"""
-            <div style="background-color: #F8F9FA; padding: 15px; border-radius: 8px; margin-top: 10px;">
-                {interpretation}
-                <br><br>
-                <i>Ce délai est recalculé automatiquement à chaque mise à jour des données.</i>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Optionnel : Afficher le graphique des corrélations par lag
-            with st.expander("📊 Voir le détail des corrélations par décalage"):
-                fig_lags = go.Figure()
-                fig_lags.add_trace(go.Bar(
-                    x=list(range(len(correlations))),
-                    y=correlations,
-                    marker_color=['#E74C3C' if c < 0 else '#27AE60' for c in correlations],
-                    name='Corrélation'
-                ))
-                fig_lags.add_vline(x=best_lag, line_dash="dash", line_color="blue", 
-                                  annotation_text=f"Optimal: {best_lag} jours")
-                fig_lags.update_layout(
-                    title="Corrélation Gaz vs Yara par décalage (jours ouvrés)",
-                    xaxis_title="Décalage (jours)",
-                    yaxis_title="Corrélation",
-                    height=250
-                )
-                st.plotly_chart(fig_lags, use_container_width=True)
+            # Calcul du délai optimal via corrélation croisée
+            if 'Gaz_Nat_EU' in df_comm_filtre.columns and 'Yara (Norvège)' in df_prices_filtre.columns:
+                gaz_series = df_comm_filtre['Gaz_Nat_EU'].dropna()
+                yara_series = df_prices_filtre['Yara (Norvège)'].dropna()
                 
-        else:
-            st.info("Données insuffisantes pour calculer le délai de transmission (minimum 60 jours requis).")
-    else:
-        st.info("Données Gaz ou Yara non disponibles.")
+                common_idx = gaz_series.index.intersection(yara_series.index)
+                if len(common_idx) > 60:
+                    # Calcul des rendements journaliers (variations en %)
+                    gaz_returns = gaz_series.loc[common_idx].pct_change().dropna()
+                    yara_returns = yara_series.loc[common_idx].pct_change().dropna()
+                    
+                    # Réalignement après dropna
+                    common_returns_idx = gaz_returns.index.intersection(yara_returns.index)
+                    gaz_ret_aligned = gaz_returns.loc[common_returns_idx]
+                    yara_ret_aligned = yara_returns.loc[common_returns_idx]
+                    
+                    # Calcul des corrélations pour différents décalages (en jours ouvrés)
+                    correlations = []
+                    max_lag = min(90, len(gaz_ret_aligned) // 3)  # Maximum 90 jours ou 1/3 des données
+                    
+                    for lag in range(0, max_lag + 1):
+                        if lag == 0:
+                            corr = gaz_ret_aligned.corr(yara_ret_aligned)
+                        else:
+                            # Gaz décalé de 'lag' jours vs Yara
+                            # On compare gaz(t-lag) avec yara(t)
+                            corr = gaz_ret_aligned.iloc[:-lag].corr(yara_ret_aligned.iloc[lag:])
+                        correlations.append(corr if not pd.isna(corr) else 0)
+                    
+                    # Trouver le lag avec la corrélation maximale (en valeur absolue)
+                    correlations_abs = [abs(c) for c in correlations]
+                    best_lag = np.argmax(correlations_abs)
+                    best_corr = correlations[best_lag]
+                    
+                    # Conversion en mois ouvrés (21 jours = 1 mois)
+                    mois_estimes = best_lag / 21
+                    
+                    col_a, col_b = st.columns(2)
+                    with col_a:
+                        st.metric(
+                            label="Délai de transmission optimal",
+                            value=f"{mois_estimes:.1f} mois",
+                            delta=f"Corrélation : {best_corr:.2f}" if not pd.isna(best_corr) else "Corrélation : N/A"
+                        )
+                    with col_b:
+                        st.metric(
+                            label="Nombre de jours ouvrés",
+                            value=f"{best_lag} jours"
+                        )
+                    
+                    # Interprétation avec gestion du NaN
+                    if pd.isna(best_corr) or abs(best_corr) < 0.1:
+                        interpretation = """
+                        <b> Corrélation faible ou inexistante</b><br>
+                        La relation entre le gaz et Yara n'est pas linéaire sur cette période.
+                        Cela peut indiquer que d'autres facteurs (géopolitiques, saisonniers) 
+                        dominent actuellement le marché.
+                        """
+                    else:
+                        direction = "positive" if best_corr > 0 else "négative"
+                        interpretation = f"""
+                        <b> Interprétation :</b> Une variation du prix du gaz met environ 
+                        <b>{mois_estimes:.1f} mois</b> pour se répercuter significativement 
+                        sur l'action Yara (proxy des producteurs d'engrais). 
+                        La corrélation est <b>{direction} ({best_corr:.2f})</b>.
+                        <br><br>
+                        Ce délai reflète le temps de transmission des coûts de production 
+                        aux marchés financiers. Il est calculé dynamiquement à partir des 
+                        données réelles via corrélation croisée.
+                        """
+                    
+                    st.markdown(f"""
+                    <div style="background-color: #F8F9FA; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                        {interpretation}
+                        <br><br>
+                        <i>Ce délai est recalculé automatiquement à chaque mise à jour des données.</i>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Optionnel : Afficher le graphique des corrélations par lag
+                    with st.expander(" Voir le détail des corrélations par décalage"):
+                        fig_lags = go.Figure()
+                        fig_lags.add_trace(go.Bar(
+                            x=list(range(len(correlations))),
+                            y=correlations,
+                            marker_color=['#E74C3C' if c < 0 else '#27AE60' for c in correlations],
+                            name='Corrélation'
+                        ))
+                        fig_lags.add_vline(x=best_lag, line_dash="dash", line_color="blue", 
+                                          annotation_text=f"Optimal: {best_lag} jours")
+                        fig_lags.update_layout(
+                            title="Corrélation Gaz vs Yara par décalage (jours ouvrés)",
+                            xaxis_title="Décalage (jours)",
+                            yaxis_title="Corrélation",
+                            height=250
+                        )
+                        st.plotly_chart(fig_lags, use_container_width=True)
+                        
+                else:
+                    st.info("Données insuffisantes pour calculer le délai de transmission (minimum 60 jours requis).")
+            else:
+                st.info("Données Gaz ou Yara non disponibles.")
     
     st.divider()
     
@@ -1004,11 +1004,11 @@ with tab5:
             variation = ((ratio_actuel / ratio_moyen) - 1) * 100
             
             if variation < -10:
-                st.error(f"🚨 Le ratio est **{abs(variation):.1f}% inférieur** à sa moyenne historique. Situation critique pour les agriculteurs.")
+                st.error(f" Le ratio est **{abs(variation):.1f}% inférieur** à sa moyenne historique. Situation critique pour les agriculteurs.")
             elif variation < 0:
-                st.warning(f"⚠️ Le ratio est **{abs(variation):.1f}% inférieur** à sa moyenne historique.")
+                st.warning(f" Le ratio est **{abs(variation):.1f}% inférieur** à sa moyenne historique.")
             else:
-                st.success(f"✅ Le ratio est **{variation:.1f}% supérieur** à sa moyenne historique.")
+                st.success(f" Le ratio est **{variation:.1f}% supérieur** à sa moyenne historique.")
         else:
             st.info("Pas de dates communes entre le Blé et Yara.")
     else:
