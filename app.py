@@ -827,7 +827,7 @@ with tab4:
     
     fig_map.update_geos(
         center=dict(lat=54.5, lon=10.0),
-        projection_scale=1.2,
+        projection_scale=1,
         showcountries=True,
         countrycolor="white",
         showcoastlines=True,
