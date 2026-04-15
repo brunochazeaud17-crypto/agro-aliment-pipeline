@@ -103,22 +103,25 @@ with st.expander("📌 A propos de ce projet - Cliquez pour ouvrir/fermer", expa
         Toute tension géopolitique (Iran/Israël, guerre en Ukraine) fait flamber le prix du gaz... et donc le prix des engrais, menaçant nos récoltes.
         
         ### Comment ça fonctionne ?
-        - **Données boursières** : Récupérées chaque jour via **Yahoo Finance** (yfinance) pour 6 géants européens.
+        - **Données boursières** : Récupérées chaque jour via **Yahoo Finance** pour 6 géants européens des fertilisants.
+        - **Matières premières** : Prix du **Gaz naturel européen (TTF)** et du **Blé (Chicago)** également via Yahoo Finance.
         - **Actualités** : Articles frais tirés de **NewsAPI.org** avec les mots-clés *fertilizer, Europe, gas, Middle East*.
         - **Analyse de sentiment** : Un algorithme de **NLP (VADER)** note chaque titre de -1 (très négatif) à +1 (très positif).
         - **Mise à jour** : Un script automatique tourne toutes les **24h via GitHub Actions**.
         
-        **Utilité concrète** : Anticiper les tensions sur les prix alimentaires, comprendre les marchés, suivre l'impact des crises.
+        **Utilité concrète** : Anticiper les tensions sur les prix alimentaires, comprendre les marchés, suivre l'impact des crises sur la souveraineté alimentaire européenne.
         """)
     with col_desc2:
         st.markdown("""
         ### Sources
-        - **Prix** : Yahoo Finance  
+        - **Prix des actions** : Yahoo Finance  
+        - **Gaz naturel (TTF)** : Yahoo Finance
+        - **Blé (Chicago SRW)** : Yahoo Finance
         - **Actualités** : NewsAPI (Bloomberg, Reuters, AP News...)  
         - **Fréquence** : Mise à jour quotidienne
         """)
         st.success("Données actualisées automatiquement chaque jour.")
-
+        
 # --- CHARGEMENT DES DONNÉES ---
 @st.cache_data(ttl=3600)
 def load_data():
