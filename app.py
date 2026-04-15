@@ -99,29 +99,47 @@ with st.expander("📌 A propos de ce projet - Cliquez pour ouvrir/fermer", expa
     with col_desc1:
         st.markdown("""
         ### Pourquoi ce dashboard ?
-        La souveraineté alimentaire de l'Europe dépend à **70% des engrais importés**, dont une large part du gaz naturel (Russie, Moyen-Orient).  
-        Toute tension géopolitique faisant flamber le prix du gaz... impact donc le prix des engrais, menaçant les récoltes Européennes.
+        La **souveraineté alimentaire** de l'Europe est menacée par sa dépendance aux engrais importés. Voici la chaîne de causalité :
+        
+        > 🔴 **Gaz naturel** → 🟡 **Ammoniac** (procédé Haber-Bosch) → 🟢 **Engrais azotés** → 🌾 **Récoltes** → 🍞 **Nourriture**
+        
+        ### Le rôle clé de YARA
+        - **YARA** est le **1er producteur mondial d'engrais azotés** d'origine européenne
+        - Le gaz naturel représente **70 à 80% du coût de production** d'une tonne d'ammoniac
+        - **Exemple concret** : Quand le gaz passe de 30€ à 100€/MWh, le coût de production d'une tonne d'ammoniac augmente de **+200 à 250€**
+        - L'Europe importe encore **30% de ses engrais azotés** de Russie et Biélorussie
+        
+        ### Les autres maillons fragiles
+        - **Grupa Azoty** (Pologne) : très exposé au gaz russe via le gazoduc Yamal
+        - **ICL** (Israël) : vulnérable aux tensions au Moyen-Orient (engrais potassiques)
+        - **K+S** (Allemagne) : dépendant des importations de gaz pour ses usines
         
         ### Comment ça fonctionne ?
-        - **Données boursières** : Récupérées chaque jour via Yahoo Finance pour 6 géants européens des fertilisants.
-        - **Matières premières** : Prix du Gaz naturel européen (TTF) et du Blé (Chicago) également via Yahoo Finance.
-        - **Actualités** : Articles frais tirés de NewsAPI.org avec les mots-clés *fertilizer, Europe, gas, Middle East*.
-        - **Analyse de sentiment** : Un algorithme de NLP (VADER) note chaque titre de -1 (très négatif) à +1 (très positif).
-        - **Mise à jour** : Un script automatique tourne toutes les 24h via GitHub Actions.
+        - **Données boursières** : Récupérées chaque jour via **Yahoo Finance** (yfinance) pour 6 géants européens.
+        - **Actualités** : Articles frais tirés de **NewsAPI.org** avec les mots-clés *fertilizer, Europe, gas, Middle East*.
+        - **Analyse de sentiment** : Un algorithme de **NLP (VADER)** note chaque titre de -1 (très négatif) à +1 (très positif).
+        - **Mise à jour** : Un script automatique tourne toutes les **24h via GitHub Actions**.
         
-        **Utilité concrète** : Anticiper les tensions sur les prix alimentaires, comprendre les marchés, suivre l'impact des crises sur la souveraineté alimentaire européenne.
+        **Utilité concrète** : Anticiper les tensions sur les prix alimentaires 6 à 12 mois avant qu'elles n'arrivent dans les supermarchés.
         """)
     with col_desc2:
         st.markdown("""
+        ### 📊 La chaîne de transmission en chiffres
+        
+        | Maillon | Délai |
+        |---------|-------|
+        | Hausse gaz | J+0 |
+        | Hausse prix engrais | J+15 à J+30 |
+        | Baisse utilisation engrais | Saisson suivante |
+        | Baisse rendements | 6-12 mois |
+        | Hausse prix alimentaires | 6-18 mois |
+        
         ### Sources
-        - **Prix des actions** : Yahoo Finance  
-        - **Gaz naturel (TTF)** : Yahoo Finance
-        - **Blé (Chicago SRW)** : Yahoo Finance
+        - **Prix** : Yahoo Finance  
         - **Actualités** : NewsAPI (Bloomberg, Reuters, AP News...)  
         - **Fréquence** : Mise à jour quotidienne
         """)
-        st.success("Données actualisées automatiquement chaque jour.")
-        
+        st.success("Données actualisées automatiquement chaque jour.")        
 # --- CHARGEMENT DES DONNÉES ---
 @st.cache_data(ttl=3600)
 def load_data():
