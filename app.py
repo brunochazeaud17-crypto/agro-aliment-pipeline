@@ -1028,36 +1028,36 @@ with tab5:
     col_jauge, col_delai = st.columns([1, 2])
     
     with col_jauge:
-        st.subheader("Score de Stress")
-        # Jauge centrée et harmonisée
-        fig_gauge = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=score_stress_panier,
-            title={'text': "", 'font': {'size': 0}},  # Titre masqué pour gagner de la place
-            number={
-                'font': {'size': 48, 'color': '#2C3E50'},
-                'suffix': "",
-                'valueformat': '.0f'
-            },
-            gauge={
-                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#2C3E50"},
-                'bar': {'color': "#2C3E50", 'thickness': 0.2},
-                'bgcolor': "white",
-                'borderwidth': 1,
-                'bordercolor': "#E5E8E8",
-                'steps': [
-                    {'range': [0, 40], 'color': '#D5F5E3'},
-                    {'range': [40, 70], 'color': '#FEF9E7'},
-                    {'range': [70, 100], 'color': '#FADBD8'}
-                ],
-                'threshold': {
-                    'line': {'color': "#C0392B", 'width': 3},
-                    'thickness': 0.8,
-                    'value': 70
-                }
-            },
-            domain={'x': [0.1, 0.9], 'y': [0.2, 0.8]}   # ← Ajustement pour centrage parfait
-        ))
+    st.subheader("Score de Stress")
+    # Jauge centrée et harmonisée
+    fig_gauge = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=score_stress_panier,
+        title={'text': "", 'font': {'size': 0}},  # Titre masqué pour gagner de la place
+        number={
+            'font': {'size': 48, 'color': '#2C3E50'},
+            'suffix': "",
+            'valueformat': '.0f'
+        },
+        gauge={
+            'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#2C3E50"},
+            'bar': {'color': "#2C3E50", 'thickness': 0.2},
+            'bgcolor': "white",
+            'borderwidth': 1,
+            'bordercolor': "#E5E8E8",
+            'steps': [
+                {'range': [0, 40], 'color': '#D5F5E3'},
+                {'range': [40, 70], 'color': '#FEF9E7'},
+                {'range': [70, 100], 'color': '#FADBD8'}
+            ],
+            'threshold': {
+                'line': {'color': "#C0392B", 'width': 3},
+                'thickness': 0.8,
+                'value': 70
+            }
+        },
+        domain={'x': [0.1, 0.9], 'y': [0.2, 0.8]}   # ← Ajustement pour centrage parfait
+    ))
     
     fig_gauge.update_layout(
         height=220,                                   # Hauteur réduite mais suffisante
