@@ -196,11 +196,11 @@ entreprises = df_prices.columns.tolist()
 
 # --- ONGLETS ---
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "📈 1. Analyse des Prix", 
-    "🛡️ 2. Radar de Crise", 
-    "📰 3. Journal de Bord",
-    "⛽ 4. Intrants & Dépendances",   # ← NOUVEAU
-    "🍞 5. Impact Consommateur"       # ← NOUVEAU
+    "1. Analyse de l'état financier des géants de l'agroalimentaire", 
+    "2. Radar de Crise", 
+    "3. Journal de Bord",
+    "4. Intrants & Dépendances",   # ← NOUVEAU
+    "5. Impact Consommateur"       # ← NOUVEAU
 ])
 
 # ==========================================
