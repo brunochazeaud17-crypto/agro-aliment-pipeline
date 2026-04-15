@@ -99,15 +99,15 @@ with st.expander("📌 A propos de ce projet - Cliquez pour ouvrir/fermer", expa
     with col_desc1:
         st.markdown("""
         ### Pourquoi ce dashboard ?
-        La **souveraineté alimentaire** de l'Europe dépend à **70% des engrais importés**, dont une large part du gaz naturel (Russie, Moyen-Orient).  
+        La souveraineté alimentaire de l'Europe dépend à **70% des engrais importés**, dont une large part du gaz naturel (Russie, Moyen-Orient).  
         Toute tension géopolitique (Iran/Israël, guerre en Ukraine) fait flamber le prix du gaz... et donc le prix des engrais, menaçant nos récoltes.
         
         ### Comment ça fonctionne ?
-        - **Données boursières** : Récupérées chaque jour via **Yahoo Finance** pour 6 géants européens des fertilisants.
-        - **Matières premières** : Prix du **Gaz naturel européen (TTF)** et du **Blé (Chicago)** également via Yahoo Finance.
-        - **Actualités** : Articles frais tirés de **NewsAPI.org** avec les mots-clés *fertilizer, Europe, gas, Middle East*.
-        - **Analyse de sentiment** : Un algorithme de **NLP (VADER)** note chaque titre de -1 (très négatif) à +1 (très positif).
-        - **Mise à jour** : Un script automatique tourne toutes les **24h via GitHub Actions**.
+        - **Données boursières** : Récupérées chaque jour via Yahoo Finance pour 6 géants européens des fertilisants.
+        - **Matières premières** : Prix du Gaz naturel européen (TTF) et du Blé (Chicago) également via Yahoo Finance.
+        - **Actualités** : Articles frais tirés de NewsAPI.org avec les mots-clés *fertilizer, Europe, gas, Middle East*.
+        - **Analyse de sentiment** : Un algorithme de NLP (VADER) note chaque titre de -1 (très négatif) à +1 (très positif).
+        - **Mise à jour** : Un script automatique tourne toutes les 24h via GitHub Actions.
         
         **Utilité concrète** : Anticiper les tensions sur les prix alimentaires, comprendre les marchés, suivre l'impact des crises sur la souveraineté alimentaire européenne.
         """)
