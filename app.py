@@ -101,7 +101,7 @@ with st.expander("📌 A propos de ce projet - Cliquez pour ouvrir/fermer", expa
         ### Pourquoi ce dashboard ?
         La **souveraineté alimentaire** de l'Europe est menacée par sa dépendance aux engrais importés. Voici la chaîne de causalité :
         
-        > 🔴 **Gaz naturel** → 🟡 **Ammoniac** (procédé Haber-Bosch) → 🟢 **Engrais azotés** → 🌾 **Récoltes** → 🍞 **Nourriture**
+        >  **Gaz naturel** →  **Ammoniac** (procédé Haber-Bosch) →  **Engrais azotés** → 🌾 **Récoltes** → 🍞 **Nourriture**
         
         ### Le rôle clé de YARA
         - **YARA** est le **1er producteur mondial d'engrais azotés** d'origine européenne
