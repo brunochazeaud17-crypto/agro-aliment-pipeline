@@ -101,7 +101,7 @@ from openbb import obb
 
 def fetch_usda_stocks():
     """Récupère les stocks de maïs et de blé depuis l'USDA PSD."""
-    print("📦 Récupération des stocks céréaliers (USDA)...")
+    print(" Récupération des stocks céréaliers (USDA)...")
     try:
         # Exemple pour le maïs (corn)
         df_corn = obb.commodity.psd_data(commodity='corn', country='world', attribute='ending_stocks', start_year=2020)
