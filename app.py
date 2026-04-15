@@ -750,18 +750,18 @@ with tab4:
 # ONGLET 5 : IMPACT CONSOMMATEUR & SOUVERAINETÉ
 # ==========================================
 with tab5:
-    st.header(" De la Bourse à l'Assiette : Indicateurs de Souveraineté")
+    st.header("🍞 De la Bourse à l'Assiette : Indicateurs de Souveraineté")
     
     st.markdown("""
     <div class="info-box">
-        <b> Mécanisme de transmission :</b> Une hausse du prix du gaz → hausse du coût des engrais azotés → 
+        <b>🔭 Mécanisme de transmission :</b> Une hausse du prix du gaz → hausse du coût des engrais azotés → 
         baisse des marges des agriculteurs → réduction des surfaces cultivées ou des rendements → 
         hausse des prix alimentaires (délai estimé : 6-12 mois).
     </div>
     """, unsafe_allow_html=True)
 
     if df_commodities.empty:
-        st.warning(" Données des matières premières non disponibles.")
+        st.warning("⚠️ Données des matières premières non disponibles.")
     else:
         # Filtrage sur la période sélectionnée
         mask_comm = (df_commodities.index.date >= start_date) & (df_commodities.index.date <= end_date)
@@ -770,7 +770,7 @@ with tab5:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader(" Score de Stress Alimentaire")
+            st.subheader("📊 Score de Stress Alimentaire")
             st.markdown('<div class="plot-explanation">Indicateur composite calculé à partir des données réelles : Prix du Gaz (40%), Volatilité de Yara (30%), Ratio Blé/Engrais (30%).</div>', unsafe_allow_html=True)
             
             # Calcul du score composite basé sur les données RÉELLES
@@ -845,14 +845,14 @@ with tab5:
             
             # Interprétation
             if score_stress < 40:
-                st.success(" **Stress faible** : Les conditions de marché sont favorables aux agriculteurs européens.")
+                st.success("✅ **Stress faible** : Les conditions de marché sont favorables aux agriculteurs européens.")
             elif score_stress < 70:
-                st.warning(" **Stress modéré** : Des tensions apparaissent, surveillance recommandée.")
+                st.warning("⚠️ **Stress modéré** : Des tensions apparaissent, surveillance recommandée.")
             else:
-                st.error(" **Stress élevé** : Risque important sur la souveraineté alimentaire européenne.")
+                st.error("🚨 **Stress élevé** : Risque important sur la souveraineté alimentaire européenne.")
         
         with col2:
-            st.subheader(" Délai de Transmission estimé")
+            st.subheader("⏱️ Délai de Transmission estimé")
             st.markdown('<div class="plot-explanation">Corrélation croisée entre le prix du Gaz et l\'action Yara, décalée dans le temps.</div>', unsafe_allow_html=True)
             
             # Calcul du délai optimal via corrélation croisée
@@ -908,7 +908,7 @@ with tab5:
                     # Interprétation avec gestion du NaN
                     if pd.isna(best_corr) or abs(best_corr) < 0.1:
                         interpretation = """
-                        <b> Corrélation faible ou inexistante</b><br>
+                        <b>⚠️ Corrélation faible ou inexistante</b><br>
                         La relation entre le gaz et Yara n'est pas linéaire sur cette période.
                         Cela peut indiquer que d'autres facteurs (géopolitiques, saisonniers) 
                         dominent actuellement le marché.
@@ -916,7 +916,7 @@ with tab5:
                     else:
                         direction = "positive" if best_corr > 0 else "négative"
                         interpretation = f"""
-                        <b> Interprétation :</b> Une variation du prix du gaz met environ 
+                        <b>📖 Interprétation :</b> Une variation du prix du gaz met environ 
                         <b>{mois_estimes:.1f} mois</b> pour se répercuter significativement 
                         sur l'action Yara (proxy des producteurs d'engrais). 
                         La corrélation est <b>{direction} ({best_corr:.2f})</b>.
@@ -935,7 +935,7 @@ with tab5:
                     """, unsafe_allow_html=True)
                     
                     # Optionnel : Afficher le graphique des corrélations par lag
-                    with st.expander(" Voir le détail des corrélations par décalage"):
+                    with st.expander("📊 Voir le détail des corrélations par décalage"):
                         fig_lags = go.Figure()
                         fig_lags.add_trace(go.Bar(
                             x=list(range(len(correlations))),
@@ -960,7 +960,7 @@ with tab5:
     
     st.divider()
     
-    st.subheader(" Évolution du Ratio Blé / Engrais")
+    st.subheader("📈 Évolution du Ratio Blé / Engrais")
     st.markdown('<div class="plot-explanation">Ce ratio mesure le pouvoir d\'achat des agriculteurs : quantité de blé nécessaire pour "acheter" une unité d\'engrais (proxy via l\'action Yara). Quand le ratio baisse, la rentabilité agricole se dégrade.</div>', unsafe_allow_html=True)
     
     if not df_commodities.empty and 'Ble_Chicago' in df_commodities.columns and 'Yara (Norvège)' in df_prices_filtre.columns:
@@ -1004,11 +1004,11 @@ with tab5:
             variation = ((ratio_actuel / ratio_moyen) - 1) * 100
             
             if variation < -10:
-                st.error(f" Le ratio est **{abs(variation):.1f}% inférieur** à sa moyenne historique. Situation critique pour les agriculteurs.")
+                st.error(f"🚨 Le ratio est **{abs(variation):.1f}% inférieur** à sa moyenne historique. Situation critique pour les agriculteurs.")
             elif variation < 0:
-                st.warning(f" Le ratio est **{abs(variation):.1f}% inférieur** à sa moyenne historique.")
+                st.warning(f"⚠️ Le ratio est **{abs(variation):.1f}% inférieur** à sa moyenne historique.")
             else:
-                st.success(f" Le ratio est **{variation:.1f}% supérieur** à sa moyenne historique.")
+                st.success(f"✅ Le ratio est **{variation:.1f}% supérieur** à sa moyenne historique.")
         else:
             st.info("Pas de dates communes entre le Blé et Yara.")
     else:
