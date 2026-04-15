@@ -99,7 +99,7 @@ with st.expander("📌 A propos de ce projet - Cliquez pour ouvrir/fermer", expa
     with col_desc1:
         st.markdown("""
         ### Pourquoi ce dashboard ?
-        La souveraineté alimentaire de l'Europe est menacée par sa dépendance aux engrais importés. Voici la chaîne de causalité :
+        La souveraineté alimentaire de l'Europe est fortement impactée par sa dépendance aux engrais importés. Voici la chaîne de causalité :
         
         >  **Gaz naturel**  →  **Ammoniac** (procédé Haber-Bosch) →  **Engrais azotés** →  **Récoltes** →  **Nourriture**
         
@@ -115,10 +115,10 @@ with st.expander("📌 A propos de ce projet - Cliquez pour ouvrir/fermer", expa
         - **K+S** (Allemagne) : dépendant des importations de gaz pour ses usines
         
         ### Comment ça fonctionne ?
-        - **Données boursières** : Récupérées chaque jour via **Yahoo Finance** (yfinance) pour 6 géants européens.
-        - **Actualités** : Articles frais tirés de **NewsAPI.org** avec les mots-clés *fertilizer, Europe, gas, Middle East*.
-        - **Analyse de sentiment** : Un algorithme de **NLP (VADER)** note chaque titre de -1 (très négatif) à +1 (très positif).
-        - **Mise à jour** : Un script automatique tourne toutes les **24h via GitHub Actions**.
+        - **Données boursières** : Récupérées chaque jour via Yahoo Finance pour 6 géants européens.
+        - **Actualités** : Articles frais tirés de NewsAPI.org avec les mots-clés *fertilizer, Europe, gas, Middle East*.
+        - **Analyse de sentiment** : Un algorithme de NLP (VADER) note chaque titre de -1 (très négatif) à +1 (très positif).
+        - **Mise à jour** : Un script automatique tourne toutes les 24h via GitHub Actions.
         
         **Utilité concrète** : Anticiper les tensions sur les prix alimentaires 6 à 12 mois avant qu'elles n'arrivent dans les supermarchés.
         """)
