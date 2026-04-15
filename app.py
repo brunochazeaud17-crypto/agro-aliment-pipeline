@@ -574,31 +574,6 @@ with tab2:
         fig_radar.update_layout(polar=dict(radialaxis=dict(range=[0, 100])), height=400)
         st.plotly_chart(fig_radar, use_container_width=True)
 
-
-st.subheader(" Dépendance de l'UE aux engrais importés")
-st.markdown('<div class="plot-explanation">Pourcentage d\'engrais azotés importés par rapport à la consommation nationale.</div>', unsafe_allow_html=True)
-
-# Données statiques (source : Eurostat / Fertilizers Europe - estimations)
-dependency_data = {
-    'Pays': ['France', 'Allemagne', 'Italie', 'Espagne', 'Pologne', 'Pays-Bas', 'Belgique', 'Roumanie', 'Grèce', 'Portugal', 'Suède', 'Autriche', 'Bulgarie', 'Finlande', 'Danemark'],
-    'Code': ['FRA', 'DEU', 'ITA', 'ESP', 'POL', 'NLD', 'BEL', 'ROU', 'GRC', 'PRT', 'SWE', 'AUT', 'BGR', 'FIN', 'DNK'],
-    'Dépendance (%)': [25, 30, 60, 45, 70, 20, 40, 80, 55, 65, 15, 35, 85, 25, 10]
-}
-df_dep = pd.DataFrame(dependency_data)
-
-fig_map = px.choropleth(
-    df_dep,
-    locations='Code',
-    color='Dépendance (%)',
-    hover_name='Pays',
-    color_continuous_scale='Reds',
-    title='Part des importations dans la consommation d\'engrais azotés (%)',
-    scope='europe'
-)
-fig_map.update_layout(height=400)
-st.plotly_chart(fig_map, use_container_width=True)
-st.caption("Source : Estimations basées sur les données Eurostat et Fertilizers Europe.")
-
 # ==========================================
 # ONGLET 3 : JOURNAL DE BORD
 # ==========================================
