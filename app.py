@@ -782,7 +782,7 @@ with tab5:
         st.subheader("Délai de Transmission")
         st.markdown('<div class="plot-explanation">Corrélation croisée : Sentiment Négatif aujourd\'hui → Hausse des Prix dans 6 mois.</div>', unsafe_allow_html=True)
         
-        st.info("👆 Voir la 'Matrice des délais de réaction' dans l'onglet 'Journal de Bord' pour le calcul précis.")
+        st.info("Remarque : Voir la "Matrice des délais de réaction" dans l'onglet "Journal de Bord" pour le calcul précis.")
         
         st.metric(label="Délai moyen observé (Sentiment → Prix Boulanger)", value="6.2 Mois", delta="+0.3 mois vs 2022")
         
