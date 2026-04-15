@@ -852,7 +852,7 @@ with tab5:
                 st.error(" **Stress élevé** : Risque important sur la souveraineté alimentaire européenne.")
         
         with col2:
-            st.subheader("⏱️ Délai de Transmission estimé")
+            st.subheader(" Délai de Transmission estimé")
             st.markdown('<div class="plot-explanation">Corrélation croisée entre le prix du Gaz et l\'action Yara, décalée dans le temps.</div>', unsafe_allow_html=True)
             
             # Calcul du délai optimal via corrélation croisée
