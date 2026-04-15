@@ -1029,15 +1029,19 @@ with tab5:
     
     with col_jauge:
         st.subheader("Score de Stress")
-        # Jauge réduite : height de 280 → 200
+        # Jauge centrée et harmonisée
         fig_gauge = go.Figure(go.Indicator(
             mode="gauge+number",
             value=score_stress_panier,
-            title={'text': "Stress", 'font': {'size': 13}},
-            number={'font': {'size': 36}, 'suffix': ""},
+            title={'text': "", 'font': {'size': 0}},  # Titre masqué pour gagner de la place
+            number={
+                'font': {'size': 48, 'color': '#2C3E50'},
+                'suffix': "",
+                'valueformat': '.0f'
+            },
             gauge={
-                'axis': {'range': [0, 100], 'tickwidth': 1},
-                'bar': {'color': "#2C3E50", 'thickness': 0.75},
+                'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#2C3E50"},
+                'bar': {'color': "#2C3E50", 'thickness': 0.2},
                 'bgcolor': "white",
                 'borderwidth': 1,
                 'bordercolor': "#E5E8E8",
@@ -1052,22 +1056,25 @@ with tab5:
                     'value': 70
                 }
             },
-            domain={'x': [0, 1], 'y': [0.15, 1]}  # ← CLEF : recentre la jauge verticalement
+            domain={'x': [0.1, 0.9], 'y': [0.2, 0.8]}   # ← Ajustement pour centrage parfait
         ))
-        fig_gauge.update_layout(
-            height=200, 
-            margin=dict(l=15, r=15, t=10, b=5),  # ← Marges réduites
-            paper_bgcolor='rgba(0,0,0,0)'          # ← Fond transparent
-        )
-        st.plotly_chart(fig_gauge, use_container_width=True)
-        
-        # Mini-interprétation
-        if score_stress_panier < 40:
-            st.success(" Situation favorable")
-        elif score_stress_panier < 70:
-            st.warning(" Vigilance")
-        else:
-            st.error(" Tension élevée")
+    
+    fig_gauge.update_layout(
+        height=220,                                   # Hauteur réduite mais suffisante
+        margin=dict(l=10, r=10, t=20, b=10),          # Marges symétriques
+        paper_bgcolor='rgba(0,0,0,0)',
+        font={'color': "#2C3E50", 'family': "Arial"}
+    )
+    
+    st.plotly_chart(fig_gauge, use_container_width=True)
+    
+    # Interprétation (inchangée)
+    if score_stress_panier < 40:
+        st.success(" Situation favorable")
+    elif score_stress_panier < 70:
+        st.warning(" Vigilance")
+    else:
+        st.error(" Tension élevée")
     
     with col_delai:
         st.subheader(" Délai de transmission estimé")
