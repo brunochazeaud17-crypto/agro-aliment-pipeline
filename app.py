@@ -883,21 +883,15 @@ with tab5:
                     lag_values = []
                     
                     # Calcul des corrélations pour différents décalages
-                    # CORRECTION : On teste les décalages NÉGATIFS (Gaz AVANT Yara) et POSITIFS (Gaz APRÈS Yara)
                     max_lag = min(90, len(gaz_ret_aligned) // 3)
                     
                     for lag in range(-max_lag, max_lag + 1):
                         if lag < 0:
-                            # Gaz en avance sur Yara (lag négatif) : on décale Yara
-                            # On compare gaz(t) avec yara(t + |lag|)
                             abs_lag = abs(lag)
                             corr = gaz_ret_aligned.iloc[:-abs_lag].corr(yara_ret_aligned.iloc[abs_lag:])
                         elif lag > 0:
-                            # Yara en avance sur Gaz (lag positif) : on décale Gaz
-                            # On compare gaz(t + lag) avec yara(t)
                             corr = gaz_ret_aligned.iloc[lag:].corr(yara_ret_aligned.iloc[:-lag])
                         else:
-                            # lag == 0 : corrélation instantanée
                             corr = gaz_ret_aligned.corr(yara_ret_aligned)
                         
                         correlations.append(corr if not pd.isna(corr) else 0)
@@ -927,24 +921,28 @@ with tab5:
                             delta=f"Lag = {best_lag} jours"
                         )
                     
-                    # Interprétation avec conditions dans le bon ordre
+                    # CORRECTION : Utilisation de st.markdown() SANS HTML pour le texte formaté
+                    # ou conversion correcte du Markdown en HTML
+                    
                     if pd.isna(best_corr) or abs(best_corr) < 0.1:
-                        interpretation = """
-                        ⚠️ **Corrélation faible ou inexistante**  
+                        interpretation_title = "⚠️ **Corrélation faible ou inexistante**"
+                        interpretation_text = """
                         La relation entre le gaz et Yara n'est pas linéaire sur cette période.
                         Cela peut indiquer que d'autres facteurs (géopolitiques, saisonniers) 
                         dominent actuellement le marché.
                         """
                     elif best_lag == 0:
-                        interpretation = f"""
-                        📖 **Interprétation** : La corrélation maximale ({best_corr:.2f}) est observée **sans décalage**.  
+                        interpretation_title = "📖 **Interprétation**"
+                        interpretation_text = f"""
+                        La corrélation maximale ({best_corr:.2f}) est observée **sans décalage**.  
                         Le marché des engrais (Yara) réagit quasi-instantanément aux variations du prix du gaz.  
                         Cela peut indiquer une forte efficience du marché ou une période d'observation trop courte.
                         """
                     elif best_lag > 0:
                         direction = "positive" if best_corr > 0 else "négative"
-                        interpretation = f"""
-                        📖 **Interprétation** : Une variation du prix du gaz met environ **{mois_estimes:.1f} mois** pour se répercuter significativement sur l'action Yara.  
+                        interpretation_title = "📖 **Interprétation**"
+                        interpretation_text = f"""
+                        Une variation du prix du gaz met environ **{mois_estimes:.1f} mois** pour se répercuter significativement sur l'action Yara.  
                         Le Gaz **précède** Yara de **{best_lag} jours ouvrés**.  
                         La corrélation est **{direction} ({best_corr:.2f})**.  
                         
@@ -952,18 +950,38 @@ with tab5:
                         """
                     else:  # best_lag < 0
                         direction = "positive" if best_corr > 0 else "négative"
-                        interpretation = f"""
-                        📖 **Interprétation** : Contre-intuitivement, c'est Yara qui **précède** le Gaz de **{abs(best_lag)} jours ouvrés**.  
+                        interpretation_title = "📖 **Interprétation**"
+                        interpretation_text = f"""
+                        Contre-intuitivement, c'est Yara qui **précède** le Gaz de **{abs(best_lag)} jours ouvrés**.  
                         La corrélation est **{direction} ({best_corr:.2f})**.  
                         
                         Cela peut indiquer que le marché anticipe les tensions sur le gaz ou que d'autres facteurs 
                         (spéculation, saisonnalité) dominent la relation.
                         """
                     
-                    # Affichage avec unsafe_allow_html=True
+                    # SOLUTION 1 : Utiliser st.markdown() standard (recommandé)
+                    st.markdown(interpretation_title)
+                    st.markdown(interpretation_text)
+                    st.markdown("*Ce délai est recalculé automatiquement à chaque mise à jour des données.*")
+                    
+                    # SOLUTION 2 (alternative) : Si vous voulez garder le style CSS
+                    # Convertir le Markdown en HTML propre
+                    import re
+                    
+                    def markdown_to_html(text):
+                        # Gras
+                        text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+                        # Italique
+                        text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text)
+                        # Sauts de ligne
+                        text = text.replace('\n', '<br>')
+                        return text
+                    
+                    interpretation_html = markdown_to_html(interpretation_title + "\n\n" + interpretation_text)
+                    
                     st.markdown(f"""
                     <div style="background-color: #F8F9FA; padding: 15px; border-radius: 8px; margin-top: 10px; color: #2C3E50;">
-                        {interpretation}
+                        {interpretation_html}
                         <br><br>
                         <i>Ce délai est recalculé automatiquement à chaque mise à jour des données.</i>
                     </div>
@@ -973,7 +991,6 @@ with tab5:
                     with st.expander("📊 Voir le détail des corrélations par décalage"):
                         fig_lags = go.Figure()
                         
-                        # Barres pour les corrélations
                         colors = ['#E74C3C' if c < 0 else '#27AE60' for c in correlations]
                         fig_lags.add_trace(go.Bar(
                             x=lag_values,
@@ -984,7 +1001,6 @@ with tab5:
                             textposition='outside'
                         ))
                         
-                        # Ligne verticale au lag optimal
                         fig_lags.add_vline(
                             x=best_lag, 
                             line_dash="dash", 
@@ -993,7 +1009,6 @@ with tab5:
                             annotation_position="top"
                         )
                         
-                        # Ligne horizontale à 0
                         fig_lags.add_hline(y=0, line_dash="solid", line_color="gray", opacity=0.5)
                         
                         fig_lags.update_layout(
@@ -1006,7 +1021,7 @@ with tab5:
                         )
                         st.plotly_chart(fig_lags, use_container_width=True)
                         
-                        # Tableau récapitulatif des meilleures corrélations
+                        # Tableau récapitulatif
                         st.caption("📋 **Top 5 des meilleurs décalages :**")
                         correlations_with_lag = list(zip(lag_values, correlations, correlations_abs))
                         correlations_with_lag.sort(key=lambda x: x[2], reverse=True)
@@ -1041,7 +1056,7 @@ with tab5:
         common_idx = ble_align.index.intersection(yara_align.index)
         if len(common_idx) > 0:
             ratio = ble_align.loc[common_idx] / yara_align.loc[common_idx]
-            ratio_normalized = ratio / ratio.iloc[0] * 100  # Base 100 au début de la période
+            ratio_normalized = ratio / ratio.iloc[0] * 100
             
             fig_ratio = go.Figure()
             fig_ratio.add_trace(go.Scatter(
@@ -1054,7 +1069,6 @@ with tab5:
             fig_ratio.add_hline(y=100, line_dash="dash", line_color="gray", annotation_text="Début de période")
             fig_ratio.add_hline(y=ratio_normalized.mean(), line_dash="dot", line_color="blue", annotation_text="Moyenne période")
             
-            # Zone de stress (ratio < 85)
             fig_ratio.add_hrect(
                 y0=0, y1=85, 
                 fillcolor="red", opacity=0.1,
@@ -1069,7 +1083,6 @@ with tab5:
             )
             st.plotly_chart(fig_ratio, use_container_width=True)
             
-            # Statistiques
             ratio_actuel = ratio.iloc[-1]
             ratio_moyen = ratio.mean()
             variation = ((ratio_actuel / ratio_moyen) - 1) * 100 if ratio_moyen > 0 else 0
