@@ -750,75 +750,229 @@ with tab4:
 # ONGLET 5 : IMPACT CONSOMMATEUR & SOUVERAINETÉ
 # ==========================================
 with tab5:
-    st.header(" De la Bourse à l'Assiette : Inflation Alimentaire")
+    st.header(" De la Bourse à l'Assiette : Indicateurs de Souveraineté")
     
     st.markdown("""
     <div class="info-box">
-        <b> Projection Macro :</b> Un choc de +10% sur les prix des engrais (Actions Yara/OCI) met environ 6 à 9 mois 
-        pour se répercuter sur le prix de la baguette ou des pâtes dans les supermarchés européens.
+        <b> Mécanisme de transmission :</b> Une hausse du prix du gaz → hausse du coût des engrais azotés → 
+        baisse des marges des agriculteurs → réduction des surfaces cultivées ou des rendements → 
+        hausse des prix alimentaires (délai estimé : 6-12 mois).
     </div>
     """, unsafe_allow_html=True)
 
-    col_inf1, col_inf2 = st.columns(2)
-    
-    with col_inf1:
-        st.subheader("Inflation Alimentaire Zone Euro")
-        st.markdown('<div class="plot-explanation">Évolution des prix alimentaires (IPC Alimentaire) - Données Eurostat simulées.</div>', unsafe_allow_html=True)
+    if df_commodities.empty:
+        st.warning(" Données des matières premières non disponibles.")
+    else:
+        # Filtrage sur la période sélectionnée
+        mask_comm = (df_commodities.index.date >= start_date) & (df_commodities.index.date <= end_date)
+        df_comm_filtre = df_commodities.loc[mask_comm]
         
-        # Données Eurostat simulées
-        months = pd.date_range(start='2023-01-01', periods=18, freq='ME')
-        inflation_data = pd.DataFrame({
-            'Date': months,
-            'Inflation': [15.4, 15.0, 16.0, 14.7, 12.5, 11.5, 10.0, 9.0, 8.5, 8.0, 7.0, 6.5, 5.8, 5.5, 5.0, 4.5, 4.0, 3.8]
-        })
+        col1, col2 = st.columns(2)
         
-        fig_inf = px.area(inflation_data, x='Date', y='Inflation', 
-                          color_discrete_sequence=['#A93226'])
-        fig_inf.update_layout(height=350)
-        st.plotly_chart(fig_inf, use_container_width=True)
-        st.caption("Source : Données simulées basées sur les tendances Eurostat.")
+        with col1:
+            st.subheader(" Score de Stress Alimentaire")
+            st.markdown('<div class="plot-explanation">Indicateur composite calculé à partir des données réelles : Prix du Gaz (40%), Volatilité de Yara (30%), Ratio Blé/Engrais (30%).</div>', unsafe_allow_html=True)
+            
+            # Calcul du score composite basé sur les données RÉELLES
+            score_stress = 50  # Valeur neutre par défaut
+            
+            if 'Gaz_Nat_EU' in df_comm_filtre.columns and 'Ble_Chicago' in df_comm_filtre.columns:
+                try:
+                    # 1. Composante Gaz : écart à la moyenne (normalisé 0-100)
+                    gaz_data = df_comm_filtre['Gaz_Nat_EU'].dropna()
+                    if len(gaz_data) > 0:
+                        gaz_recent = gaz_data.tail(30).mean()
+                        gaz_moyenne_hist = gaz_data.mean()
+                        gaz_score = 50 + (gaz_recent / gaz_moyenne_hist - 1) * 40
+                        gaz_score = max(0, min(100, gaz_score))
+                    else:
+                        gaz_score = 50
+                    
+                    # 2. Composante Ratio Blé/Engrais (proxy de rentabilité agricole)
+                    if 'Yara (Norvège)' in df_prices_filtre.columns:
+                        ble_data = df_comm_filtre['Ble_Chicago'].dropna()
+                        yara_data = df_prices_filtre['Yara (Norvège)'].dropna()
+                        common_idx = ble_data.index.intersection(yara_data.index)
+                        
+                        if len(common_idx) > 0:
+                            ratio = ble_data.loc[common_idx] / yara_data.loc[common_idx]
+                            ratio_recent = ratio.tail(30).mean()
+                            ratio_moyenne = ratio.mean()
+                            # Ratio bas = stress élevé (agriculteurs en difficulté)
+                            ratio_score = 50 - (ratio_recent / ratio_moyenne - 1) * 30
+                            ratio_score = max(0, min(100, ratio_score))
+                        else:
+                            ratio_score = 50
+                    else:
+                        ratio_score = 50
+                    
+                    # 3. Composante Volatilité de Yara
+                    if 'Yara (Norvège)' in df_prices_filtre.columns:
+                        yara_vol = df_prices_filtre['Yara (Norvège)'].pct_change().std() * np.sqrt(252) * 100
+                        # Volatilité > 30% = stress élevé
+                        vol_score = min(100, yara_vol * 2)
+                    else:
+                        vol_score = 50
+                    
+                    # Score composite pondéré
+                    score_stress = int(gaz_score * 0.4 + vol_score * 0.3 + ratio_score * 0.3)
+                    
+                except Exception as e:
+                    score_stress = 50
+            
+            # Affichage de la jauge avec le score calculé
+            fig_gauge = go.Figure(go.Indicator(
+                mode="gauge+number",
+                value=score_stress,
+                title={'text': "Score de Stress Alimentaire"},
+                gauge={
+                    'axis': {'range': [0, 100]},
+                    'bar': {'color': "#2C3E50"},
+                    'steps': [
+                        {'range': [0, 40], 'color': '#27AE60'},    # Vert : situation favorable
+                        {'range': [40, 70], 'color': '#F1C40F'},    # Jaune : vigilance
+                        {'range': [70, 100], 'color': '#E74C3C'}    # Rouge : tension
+                    ],
+                    'threshold': {
+                        'line': {'color': "red", 'width': 4},
+                        'thickness': 0.75,
+                        'value': 70
+                    }
+                }
+            ))
+            fig_gauge.update_layout(height=280)
+            st.plotly_chart(fig_gauge, use_container_width=True)
+            
+            # Interprétation
+            if score_stress < 40:
+                st.success(" **Stress faible** : Les conditions de marché sont favorables aux agriculteurs européens.")
+            elif score_stress < 70:
+                st.warning(" **Stress modéré** : Des tensions apparaissent, surveillance recommandée.")
+            else:
+                st.error(" **Stress élevé** : Risque important sur la souveraineté alimentaire européenne.")
         
-    with col_inf2:
-        st.subheader("Délai de Transmission")
-        st.markdown('<div class="plot-explanation">Corrélation croisée : Sentiment Négatif aujourd\'hui → Hausse des Prix dans 6 mois.</div>', unsafe_allow_html=True)
-        
-        st.info("Remarque : Voir la Matrice des délais de réaction dans l'onglet Journal de Bord pour le calcul précis.")
-        
-        st.metric(label="Délai moyen observé (Sentiment → Prix Boulanger)", value="6.2 Mois", delta="+0.3 mois vs 2022")
-        
-        # Score de Vulnérabilité
-        st.subheader("Score de Vulnérabilité Alimentaire")
-        
-        # Calcul dynamique du score si données disponibles
-        score_vuln = 72  # Valeur par défaut
-        
-        if not df_commodities.empty and 'Gaz_Nat_EU' in df_commodities.columns:
-            try:
-                # Calcul simple : plus le gaz est haut vs sa moyenne, plus le score monte
-                gaz_recent = df_commodities['Gaz_Nat_EU'].dropna().tail(30).mean()
-                gaz_moyenne = df_commodities['Gaz_Nat_EU'].dropna().mean()
-                score_vuln = min(95, max(40, 50 + (gaz_recent / gaz_moyenne - 1) * 50))
-                score_vuln = int(score_vuln)
-            except:
-                pass
+        with col2:
+            st.subheader(" Délai de Transmission estimé")
+            st.markdown('<div class="plot-explanation">Corrélation croisée entre le prix du Gaz et l\'action Yara, décalée dans le temps.</div>', unsafe_allow_html=True)
+            
+            # Calcul du délai optimal via corrélation croisée
+            if 'Gaz_Nat_EU' in df_comm_filtre.columns and 'Yara (Norvège)' in df_prices_filtre.columns:
+                gaz_series = df_comm_filtre['Gaz_Nat_EU'].dropna()
+                yara_series = df_prices_filtre['Yara (Norvège)'].dropna()
                 
-        fig_vuln = go.Figure(go.Indicator(
-            mode = "gauge+number+delta",
-            value = score_vuln,
-            domain = {'x': [0, 1], 'y': [0, 1]},
-            title = {'text': "Indice de Dépendance"},
-            delta = {'reference': 65, 'increasing': {'color': "red"}},
-            gauge = {
-                'axis': {'range': [None, 100]},
-                'bar': {'color': "#8B0000" if score_vuln > 70 else "orange"},
-                'steps' : [
-                    {'range': [0, 40], 'color': "lightgreen"},
-                    {'range': [40, 70], 'color': "khaki"},
-                    {'range': [70, 100], 'color': "lightcoral"}],
-                'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': 80}
-            }
-        ))
-        fig_vuln.update_layout(height=250)
-        st.plotly_chart(fig_vuln, use_container_width=True)
+                common_idx = gaz_series.index.intersection(yara_series.index)
+                if len(common_idx) > 60:
+                    gaz_aligned = gaz_series.loc[common_idx].pct_change().dropna()
+                    yara_aligned = yara_series.loc[common_idx].pct_change().dropna()
+                    
+                    # Calcul des corrélations pour différents décalages (en jours)
+                    correlations = []
+                    max_lag = 60  # Jours ouvrés (~3 mois)
+                    
+                    for lag in range(0, max_lag + 1):
+                        if lag == 0:
+                            corr = gaz_aligned.corr(yara_aligned)
+                        else:
+                            corr = gaz_aligned.iloc[:-lag].corr(yara_aligned.iloc[lag:])
+                        correlations.append(corr)
+                    
+                    # Trouver le lag avec la corrélation maximale (en valeur absolue)
+                    best_lag = np.argmax(np.abs(correlations))
+                    best_corr = correlations[best_lag]
+                    
+                    # Conversion en mois ouvrés (21 jours = 1 mois)
+                    mois_estimes = best_lag / 21
+                    
+                    col_a, col_b = st.columns(2)
+                    with col_a:
+                        st.metric(
+                            label="Délai de transmission optimal",
+                            value=f"{mois_estimes:.1f} mois",
+                            delta=f"Corrélation : {best_corr:.2f}"
+                        )
+                    with col_b:
+                        st.metric(
+                            label="Nombre de jours ouvrés",
+                            value=f"{best_lag} jours"
+                        )
+                    
+                    # Interprétation
+                    st.markdown(f"""
+                    <div style="background-color: #F8F9FA; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                        <b>📖 Interprétation :</b> Une variation du prix du gaz met environ 
+                        <b>{mois_estimes:.1f} mois</b> pour se répercuter significativement 
+                        sur l'action Yara (proxy des producteurs d'engrais). Ce délai reflète 
+                        le temps de transmission des coûts de production aux marchés financiers.
+                        <br><br>
+                        <i>Ce délai est calculé dynamiquement à partir des données réelles 
+                        via corrélation croisée, et se met à jour quotidiennement.</i>
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.info("Données insuffisantes pour calculer le délai de transmission (minimum 60 jours requis).")
+            else:
+                st.info("Données Gaz ou Yara non disponibles.")
+    
+    st.divider()
+    
+    st.subheader(" Évolution du Ratio Blé / Engrais")
+    st.markdown('<div class="plot-explanation">Ce ratio mesure le pouvoir d\'achat des agriculteurs : quantité de blé nécessaire pour "acheter" une unité d\'engrais (proxy via l\'action Yara). Quand le ratio baisse, la rentabilité agricole se dégrade.</div>', unsafe_allow_html=True)
+    
+    if not df_commodities.empty and 'Ble_Chicago' in df_commodities.columns and 'Yara (Norvège)' in df_prices_filtre.columns:
+        ble_align = df_comm_filtre['Ble_Chicago'].dropna()
+        yara_align = df_prices_filtre['Yara (Norvège)'].dropna()
         
-        st.caption("Calcul basé sur : Prix du Gaz + Volatilité Yara + Taux de change EUR/USD.")
+        common_idx = ble_align.index.intersection(yara_align.index)
+        if len(common_idx) > 0:
+            ratio = ble_align.loc[common_idx] / yara_align.loc[common_idx]
+            ratio_normalized = ratio / ratio.iloc[0] * 100  # Base 100 au début de la période
+            
+            fig_ratio = go.Figure()
+            fig_ratio.add_trace(go.Scatter(
+                x=ratio_normalized.index, 
+                y=ratio_normalized, 
+                fill='tozeroy', 
+                line=dict(color='#D4AC0D', width=2),
+                name='Ratio Blé/Engrais (Base 100)'
+            ))
+            fig_ratio.add_hline(y=100, line_dash="dash", line_color="gray", annotation_text="Début de période")
+            fig_ratio.add_hline(y=ratio_normalized.mean(), line_dash="dot", line_color="blue", annotation_text="Moyenne période")
+            
+            # Zone de stress (ratio < 85)
+            fig_ratio.add_hrect(
+                y0=0, y1=85, 
+                fillcolor="red", opacity=0.1,
+                layer="below", line_width=0,
+                annotation_text="Zone de stress", annotation_position="top left"
+            )
+            
+            fig_ratio.update_layout(
+                height=350, 
+                hovermode="x unified",
+                title="Ratio Blé / Engrais (Base 100 au début de période)"
+            )
+            st.plotly_chart(fig_ratio, use_container_width=True)
+            
+            # Statistiques
+            ratio_actuel = ratio.iloc[-1]
+            ratio_moyen = ratio.mean()
+            variation = ((ratio_actuel / ratio_moyen) - 1) * 100
+            
+            if variation < -10:
+                st.error(f"🚨 Le ratio est **{abs(variation):.1f}% inférieur** à sa moyenne historique. Situation critique pour les agriculteurs.")
+            elif variation < 0:
+                st.warning(f"⚠️ Le ratio est **{abs(variation):.1f}% inférieur** à sa moyenne historique.")
+            else:
+                st.success(f"✅ Le ratio est **{variation:.1f}% supérieur** à sa moyenne historique.")
+        else:
+            st.info("Pas de dates communes entre le Blé et Yara.")
+    else:
+        st.info("Données Blé ou Yara non disponibles.")
+    
+    st.divider()
+    st.caption("""
+    **Méthodologie :** Tous les indicateurs de cet onglet sont calculés à partir des données réelles 
+    mises à jour quotidiennement via Yahoo Finance (Gaz TTF, Blé Chicago, actions). 
+    Le Score de Stress est un indicateur composite pondéré. 
+    Le délai de transmission est calculé par corrélation croisée dynamique.
+    """)
