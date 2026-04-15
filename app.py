@@ -124,7 +124,7 @@ with st.expander("📌 A propos de ce projet - Cliquez pour ouvrir/fermer", expa
         """)
     with col_desc2:
         st.markdown("""
-        ### 📊 La chaîne de transmission en chiffres
+        ###  La chaîne de transmission en chiffres
         
         | Maillon | Délai |
         |---------|-------|
