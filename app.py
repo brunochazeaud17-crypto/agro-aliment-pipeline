@@ -921,71 +921,43 @@ with tab5:
                             delta=f"Lag = {best_lag} jours"
                         )
                     
-                    # CORRECTION : Utilisation de st.markdown() SANS HTML pour le texte formaté
-                    # ou conversion correcte du Markdown en HTML
-                    
+                    # Interprétation avec st.markdown() standard (SANS HTML)
                     if pd.isna(best_corr) or abs(best_corr) < 0.1:
-                        interpretation_title = "⚠️ **Corrélation faible ou inexistante**"
-                        interpretation_text = """
+                        st.markdown("⚠️ **Corrélation faible ou inexistante**")
+                        st.markdown("""
                         La relation entre le gaz et Yara n'est pas linéaire sur cette période.
                         Cela peut indiquer que d'autres facteurs (géopolitiques, saisonniers) 
                         dominent actuellement le marché.
-                        """
+                        """)
                     elif best_lag == 0:
-                        interpretation_title = "📖 **Interprétation**"
-                        interpretation_text = f"""
+                        st.markdown("📖 **Interprétation**")
+                        st.markdown(f"""
                         La corrélation maximale ({best_corr:.2f}) est observée **sans décalage**.  
                         Le marché des engrais (Yara) réagit quasi-instantanément aux variations du prix du gaz.  
                         Cela peut indiquer une forte efficience du marché ou une période d'observation trop courte.
-                        """
+                        """)
                     elif best_lag > 0:
                         direction = "positive" if best_corr > 0 else "négative"
-                        interpretation_title = "📖 **Interprétation**"
-                        interpretation_text = f"""
+                        st.markdown("📖 **Interprétation**")
+                        st.markdown(f"""
                         Une variation du prix du gaz met environ **{mois_estimes:.1f} mois** pour se répercuter significativement sur l'action Yara.  
                         Le Gaz **précède** Yara de **{best_lag} jours ouvrés**.  
                         La corrélation est **{direction} ({best_corr:.2f})**.  
                         
                         Ce délai reflète le temps de transmission des coûts de production aux marchés financiers.
-                        """
+                        """)
                     else:  # best_lag < 0
                         direction = "positive" if best_corr > 0 else "négative"
-                        interpretation_title = "📖 **Interprétation**"
-                        interpretation_text = f"""
+                        st.markdown("📖 **Interprétation**")
+                        st.markdown(f"""
                         Contre-intuitivement, c'est Yara qui **précède** le Gaz de **{abs(best_lag)} jours ouvrés**.  
                         La corrélation est **{direction} ({best_corr:.2f})**.  
                         
                         Cela peut indiquer que le marché anticipe les tensions sur le gaz ou que d'autres facteurs 
                         (spéculation, saisonnalité) dominent la relation.
-                        """
+                        """)
                     
-                    # SOLUTION 1 : Utiliser st.markdown() standard (recommandé)
-                    st.markdown(interpretation_title)
-                    st.markdown(interpretation_text)
                     st.markdown("*Ce délai est recalculé automatiquement à chaque mise à jour des données.*")
-                    
-                    # SOLUTION 2 (alternative) : Si vous voulez garder le style CSS
-                    # Convertir le Markdown en HTML propre
-                    import re
-                    
-                    def markdown_to_html(text):
-                        # Gras
-                        text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
-                        # Italique
-                        text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text)
-                        # Sauts de ligne
-                        text = text.replace('\n', '<br>')
-                        return text
-                    
-                    interpretation_html = markdown_to_html(interpretation_title + "\n\n" + interpretation_text)
-                    
-                    st.markdown(f"""
-                    <div style="background-color: #F8F9FA; padding: 15px; border-radius: 8px; margin-top: 10px; color: #2C3E50;">
-                        {interpretation_html}
-                        <br><br>
-                        <i>Ce délai est recalculé automatiquement à chaque mise à jour des données.</i>
-                    </div>
-                    """, unsafe_allow_html=True)
                     
                     # Optionnel : Afficher le graphique des corrélations par lag
                     with st.expander("📊 Voir le détail des corrélations par décalage"):
