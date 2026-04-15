@@ -724,7 +724,7 @@ with tab4:
         
         st.divider()
         
-        st.subheader("💸 Seuil de Rentabilité des Agriculteurs")
+        st.subheader(" Seuil de Rentabilité des Agriculteurs")
         st.markdown('<div class="plot-explanation">Évolution du ratio Blé / Engrais. Quand le ratio baisse, le pouvoir d\'achat de l\'agriculteur se dégrade.</div>', unsafe_allow_html=True)
         
         if 'Ble_Chicago' in df_comm_filtre.columns and 'Yara (Norvège)' in df_prices_filtre.columns:
