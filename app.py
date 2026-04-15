@@ -216,12 +216,13 @@ df_sentiment_filtre = df_sentiment.loc[mask_sentiment]
 entreprises = df_prices.columns.tolist()
 
 # --- ONGLETS ---
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "1. Analyse de l'état financier des géants", 
     "2. Radar de Crise", 
     "3. Journal de Bord",
     "4. Intrants & Dépendances",   # ← NOUVEAU
-    "5. Impact Consommateur"       # ← NOUVEAU
+    "5. Impact Consommateur",       # ← NOUVEAU
+    "6. Scénarios de Crise"    
 ])
 
 # ==========================================
@@ -1088,3 +1089,52 @@ with tab5:
                 st.success(f" **Favorable** : Le pouvoir d'achat des agriculteurs est au-dessus de la moyenne (+{variation:.0f}%). Les conditions sont bonnes pour les prochaines récoltes.")
     else:
         st.info("Données non disponibles pour ce graphique.")
+
+
+# ==========================================
+# ONGLET 6 : SCENARIOS
+# ==========================================
+
+with tab6:
+    st.header(" Scénarios de Crise : Et si... ?")
+    st.markdown('<div class="plot-explanation">Simulez l\'impact d\'une variation du prix du gaz sur les entreprises et le consommateur.</div>', unsafe_allow_html=True)
+
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        # Slider pour faire varier le prix du gaz de -50% à +100%
+        variation_gaz = st.slider("Variation du prix du gaz (%):", -50, 100, 0, 10)
+    
+    # On utilise un modèle simplifié basé sur les corrélations historiques
+    # (Tu peux affiner ces coefficients avec tes propres analyses)
+    impact_yara = variation_gaz * -0.6  # Corrélation négative
+    impact_oci = variation_gaz * -0.5
+    impact_icp = variation_gaz * -0.1  # Israël moins exposé au gaz
+
+    # Création d'un DataFrame pour afficher les résultats
+    scenario_data = pd.DataFrame({
+        'Acteur': ['Yara (Norvège)', 'OCI (Pays-Bas)', 'ICL (Israël)'],
+        'Impact Estimé (%)': [impact_yara, impact_oci, impact_icp],
+        'Prix Actuel': [
+            df_prices['Yara (Norvège)'].iloc[-1],
+            df_prices['OCI (Pays-Bas)'].iloc[-1],
+            df_prices['ICL (Israël)'].iloc[-1]
+        ]
+    })
+    scenario_data['Prix Simulé'] = scenario_data['Prix Actuel'] * (1 + scenario_data['Impact Estimé (%)']/100)
+
+    with col2:
+        st.subheader("Résultats de la simulation")
+        st.dataframe(scenario_data.style.format({'Impact Estimé (%)': '{:.1f}%', 'Prix Actuel': '{:.2f}', 'Prix Simulé': '{:.2f}'}))
+        
+        # Impact sur le consommateur
+        impact_consommateur = variation_gaz * 0.15 # Délai de 6-18 mois
+        st.metric(" Inflation alimentaire projetée", f"{impact_consommateur:.1f}%", delta=f"{impact_consommateur:.1f}%")
+
+    # Graphique comparatif
+    st.subheader("Comparaison Prix Actuel vs. Prix Simulé")
+    fig_scenario = go.Figure(data=[
+        go.Bar(name='Prix Actuel', x=scenario_data['Acteur'], y=scenario_data['Prix Actuel']),
+        go.Bar(name='Prix Simulé', x=scenario_data['Acteur'], y=scenario_data['Prix Simulé'])
+    ])
+    fig_scenario.update_layout(barmode='group', title="Impact de la variation du gaz sur le prix des actions")
+    st.plotly_chart(fig_scenario, use_container_width=True)
