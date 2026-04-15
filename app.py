@@ -770,82 +770,133 @@ with tab4:
     #bonjour
 
 
-    st.subheader("📊 Stocks Céréaliers Mondiaux (USDA)")
-    st.markdown('<div class="plot-explanation">Un niveau de stocks bas indique une vulnérabilité accrue aux chocs de production.</div>', unsafe_allow_html=True)
-    
-    try:
-        df_stocks = pd.read_sql("SELECT * FROM usda_stocks", conn)
-        df_stocks['Date'] = pd.to_datetime(df_stocks['Date'])
-        df_stocks.set_index('Date', inplace=True)
-        
-        fig_stocks = go.Figure()
-        fig_stocks.add_trace(go.Scatter(x=df_stocks.index, y=df_stocks['corn_stocks'], name='Maïs', line=dict(color='#F1C40F')))
-        fig_stocks.add_trace(go.Scatter(x=df_stocks.index, y=df_stocks['wheat_stocks'], name='Blé', line=dict(color='#D4AC0D')))
-        fig_stocks.update_layout(height=350, title="Stocks de fin de campagne (en millions de tonnes)")
-        st.plotly_chart(fig_stocks, use_container_width=True)
-    except Exception as e:
-        st.warning("Données de stocks USDA non disponibles.")
-    
     # --- CARTE EUROPÉENNE DE LA DÉPENDANCE AUX ENGRAIS IMPORTÉS ---
     st.subheader(" Dépendance de l'UE aux engrais importés")
-    st.markdown('<div class="plot-explanation">Part des importations dans la consommation totale d\'engrais azotés. Plus la couleur est foncée, plus la dépendance est élevée.</div>', unsafe_allow_html=True)
     
-    # 1. Données enrichies (nouvelles valeurs)
     dependency_data = {
-        'Pays': ['France', 'Allemagne', 'Italie', 'Espagne', 'Pologne', 'Pays-Bas', 'Belgique', 'Roumanie', 'Grèce', 'Portugal', 'Suède', 'Autriche', 'Bulgarie', 'Finlande', 'Danemark', 'Irlande', 'Lituanie', 'Lettonie', 'Estonie', 'Slovaquie', 'Slovénie', 'Croatie', 'Royaume-Uni', 'Norvège', 'Suisse'],
-        'Code': ['FRA', 'DEU', 'ITA', 'ESP', 'POL', 'NLD', 'BEL', 'ROU', 'GRC', 'PRT', 'SWE', 'AUT', 'BGR', 'FIN', 'DNK', 'IRL', 'LTU', 'LVA', 'EST', 'SVK', 'SVN', 'HRV', 'GBR', 'NOR', 'CHE'],
-        'Dépendance (%)': [28, 30, 58, 45, 65, 22, 45, 75, 55, 60, 18, 35, 80, 25, 15, 40, 85, 70, 50, 68, 62, 55, 35, 10, 20]
+        'Pays': ['France', 'Allemagne', 'Italie', 'Espagne', 'Pologne', 'Pays-Bas', 'Belgique',
+                 'Roumanie', 'Grèce', 'Portugal', 'Suède', 'Autriche', 'Bulgarie', 'Finlande',
+                 'Danemark', 'Irlande', 'Lituanie', 'Lettonie', 'Estonie', 'Slovaquie',
+                 'Slovénie', 'Croatie', 'Royaume-Uni', 'Norvège', 'Suisse'],
+        'Code': ['FRA', 'DEU', 'ITA', 'ESP', 'POL', 'NLD', 'BEL', 'ROU', 'GRC', 'PRT',
+                 'SWE', 'AUT', 'BGR', 'FIN', 'DNK', 'IRL', 'LTU', 'LVA', 'EST', 'SVK',
+                 'SVN', 'HRV', 'GBR', 'NOR', 'CHE'],
+        'Dépendance (%)': [28, 30, 58, 45, 65, 22, 45, 75, 55, 60, 18, 35, 80, 25, 15,
+                           40, 85, 70, 50, 68, 62, 55, 35, 10, 20]
     }
     df_dep = pd.DataFrame(dependency_data)
     
-    # 2. Création de la carte améliorée
+    # Catégorie pour le tooltip enrichi
+    def categorize(val):
+        if val < 25:   return "🟢 Faible dépendance"
+        elif val < 50: return "🟡 Dépendance modérée"
+        elif val < 70: return "🟠 Dépendance élevée"
+        else:          return "🔴 Très forte dépendance"
+    
+    df_dep['Catégorie'] = df_dep['Dépendance (%)'].apply(categorize)
+    df_dep['Hover'] = df_dep.apply(
+        lambda r: f"<b>{r['Pays']}</b><br>"
+                  f"Dépendance : <b>{r['Dépendance (%)']}%</b><br>"
+                  f"{r['Catégorie']}",
+        axis=1
+    )
+    
     fig_map = px.choropleth(
         df_dep,
         locations='Code',
         color='Dépendance (%)',
         hover_name='Pays',
-        color_continuous_scale='Reds',
+        custom_data=['Hover'],
+        color_continuous_scale=[
+            [0.0,  '#1a9641'],
+            [0.25, '#a6d96a'],
+            [0.50, '#ffffbf'],
+            [0.75, '#fdae61'],
+            [1.0,  '#d7191c'],
+        ],
         range_color=(0, 100),
-        title='Dépendance de l\'Europe aux engrais azotés importés (%)',
         scope='europe',
         projection='natural earth'
     )
     
-    # 3. Paramètres de zoom et de centrage pour l'Europe
-    fig_map.update_geos(
-        center=dict(lat=54.5, lon=10.0),
-        projection_scale=4.5,
-        showcountries=True,
-        countrycolor="lightgray",
-        showcoastlines=True,
-        coastlinecolor="gray",
-        showland=True,
-        landcolor="#F8F9FA",
-        showocean=True,
-        oceancolor="#EAF2F8"
+    fig_map.update_traces(
+        hovertemplate="%{customdata[0]}<extra></extra>",
+        marker_line_color='white',
+        marker_line_width=0.8,
     )
     
-    # 4. Améliorations esthétiques générales
+    fig_map.update_geos(
+        center=dict(lat=54.5, lon=10.0),
+        projection_scale=4.8,
+        showcountries=True,
+        countrycolor="white",
+        showcoastlines=True,
+        coastlinecolor="#90b4ce",
+        coastlinewidth=1.2,
+        showland=True,
+        landcolor="#e8e8e8",        # pays hors dataset en gris neutre
+        showocean=True,
+        oceancolor="#d0e8f5",
+        showlakes=True,
+        lakecolor="#d0e8f5",
+        showframe=False,
+        lonaxis=dict(range=[-25, 45]),
+        lataxis=dict(range=[34, 72]),
+    )
+    
     fig_map.update_layout(
-        height=500,
-        margin=dict(l=10, r=10, t=50, b=10),
+        title=dict(
+            text="<b>Dépendance aux engrais azotés importés en Europe</b>",
+            font=dict(size=17, color="#1a1a2e", family="Arial"),
+            x=0.5,
+            xanchor='center',
+            y=0.97,
+        ),
+        height=540,
+        margin=dict(l=0, r=0, t=45, b=0),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
         coloraxis_colorbar=dict(
-            title="Part des<br>importations<br>(%)",
-            len=0.5,
+            title=dict(
+                text="Part des importations",
+                font=dict(size=12, color="#333"),
+            ),
+            tickvals=[0, 25, 50, 75, 100],
+            ticktext=['0 %', '25 %', '50 %', '75 %', '100 %'],
+            tickfont=dict(size=11, color="#333"),
+            len=0.65,
+            thickness=14,
             yanchor="middle",
             y=0.5,
-            x=0.95,
-            tickvals=[0, 25, 50, 75, 100],
-            ticktext=['0%', '25%', '50%', '75%', '100%']
+            x=1.0,
+            xanchor="left",
+            outlinewidth=0,
+            bgcolor='rgba(255,255,255,0.85)',
+            borderwidth=0,
+            ticks="outside",
+            ticklen=4,
         ),
-        geo=dict(
-            lonaxis=dict(range=[-25, 45]),
-            lataxis=dict(range=[30, 75])
-        )
+        annotations=[
+            dict(
+                text="🟢 < 25 %  Faible  |  🟡 25–50 %  Modérée  |  🟠 50–70 %  Élevée  |  🔴 > 70 %  Très élevée",
+                x=0.5, y=-0.01,
+                xref='paper', yref='paper',
+                showarrow=False,
+                font=dict(size=10.5, color="#555"),
+                align='center',
+            ),
+            dict(
+                text="Source : Eurostat · Fertilizers Europe · World Bank WITS",
+                x=0.5, y=-0.05,
+                xref='paper', yref='paper',
+                showarrow=False,
+                font=dict(size=9.5, color="#888", style='italic'),
+                align='center',
+            ),
+        ]
     )
     
     st.plotly_chart(fig_map, use_container_width=True)
-    st.caption("Source : Estimations basées sur les données d'Eurostat, Fertilizers Europe et du World Bank's WITS.")
 
 
 # ==========================================
