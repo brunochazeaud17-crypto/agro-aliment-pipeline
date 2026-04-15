@@ -784,6 +784,67 @@ try:
 except Exception as e:
     st.warning("Données de stocks USDA non disponibles.")
 
+# --- CARTE EUROPÉENNE DE LA DÉPENDANCE AUX ENGRAIS IMPORTÉS ---
+st.subheader(" Dépendance de l'UE aux engrais importés")
+st.markdown('<div class="plot-explanation">Part des importations dans la consommation totale d\'engrais azotés. Plus la couleur est foncée, plus la dépendance est élevée.</div>', unsafe_allow_html=True)
+
+# 1. Données enrichies (nouvelles valeurs)
+dependency_data = {
+    'Pays': ['France', 'Allemagne', 'Italie', 'Espagne', 'Pologne', 'Pays-Bas', 'Belgique', 'Roumanie', 'Grèce', 'Portugal', 'Suède', 'Autriche', 'Bulgarie', 'Finlande', 'Danemark', 'Irlande', 'Lituanie', 'Lettonie', 'Estonie', 'Slovaquie', 'Slovénie', 'Croatie', 'Royaume-Uni', 'Norvège', 'Suisse'],
+    'Code': ['FRA', 'DEU', 'ITA', 'ESP', 'POL', 'NLD', 'BEL', 'ROU', 'GRC', 'PRT', 'SWE', 'AUT', 'BGR', 'FIN', 'DNK', 'IRL', 'LTU', 'LVA', 'EST', 'SVK', 'SVN', 'HRV', 'GBR', 'NOR', 'CHE'],
+    'Dépendance (%)': [28, 30, 58, 45, 65, 22, 45, 75, 55, 60, 18, 35, 80, 25, 15, 40, 85, 70, 50, 68, 62, 55, 35, 10, 20]
+}
+df_dep = pd.DataFrame(dependency_data)
+
+# 2. Création de la carte améliorée
+fig_map = px.choropleth(
+    df_dep,
+    locations='Code',
+    color='Dépendance (%)',
+    hover_name='Pays',
+    color_continuous_scale='Reds',
+    range_color=(0, 100),
+    title='Dépendance de l\'Europe aux engrais azotés importés (%)',
+    scope='europe',
+    projection='natural earth'
+)
+
+# 3. Paramètres de zoom et de centrage pour l'Europe
+fig_map.update_geos(
+    center=dict(lat=54.5, lon=10.0),
+    projection_scale=4.5,
+    showcountries=True,
+    countrycolor="lightgray",
+    showcoastlines=True,
+    coastlinecolor="gray",
+    showland=True,
+    landcolor="#F8F9FA",
+    showocean=True,
+    oceancolor="#EAF2F8"
+)
+
+# 4. Améliorations esthétiques générales
+fig_map.update_layout(
+    height=500,
+    margin=dict(l=10, r=10, t=50, b=10),
+    coloraxis_colorbar=dict(
+        title="Part des<br>importations<br>(%)",
+        len=0.5,
+        yanchor="middle",
+        y=0.5,
+        x=0.95,
+        tickvals=[0, 25, 50, 75, 100],
+        ticktext=['0%', '25%', '50%', '75%', '100%']
+    ),
+    geo=dict(
+        lonaxis=dict(range=[-25, 45]),
+        lataxis=dict(range=[30, 75])
+    )
+)
+
+st.plotly_chart(fig_map, use_container_width=True)
+st.caption("Source : Estimations basées sur les données d'Eurostat, Fertilizers Europe et du World Bank's WITS.")
+
 
 # ==========================================
 # ONGLET 5 : IMPACT CONSOMMATEUR & SOUVERAINETÉ
