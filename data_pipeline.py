@@ -96,32 +96,26 @@ def fetch_fao_fpi():
         return pd.DataFrame()
 
 
-# Ajoute cette importation en haut du fichier
-from openbb import obb
-
-def fetch_usda_stocks():
-    """Récupère les stocks de maïs et de blé depuis l'USDA PSD."""
-    print(" Récupération des stocks céréaliers (USDA)...")
-    try:
-        # Exemple pour le maïs (corn)
-        df_corn = obb.commodity.psd_data(commodity='corn', country='world', attribute='ending_stocks', start_year=2020)
-        df_corn['Date'] = pd.to_datetime(df_corn['date'])
-        df_corn = df_corn[['Date', 'value']].rename(columns={'value': 'corn_stocks'})
-        df_corn.set_index('Date', inplace=True)
-        
-        # Exemple pour le blé (wheat)
-        df_wheat = obb.commodity.psd_data(commodity='wheat', country='world', attribute='ending_stocks', start_year=2020)
-        df_wheat['Date'] = pd.to_datetime(df_wheat['date'])
-        df_wheat = df_wheat[['Date', 'value']].rename(columns={'value': 'wheat_stocks'})
-        df_wheat.set_index('Date', inplace=True)
-        
-        # Fusion des données
-        df_stocks = pd.merge(df_corn, df_wheat, left_index=True, right_index=True, how='outer')
-        print(f"✅ Stocks USDA récupérés ! ({len(df_stocks)} années de données)")
-        return df_stocks
-    except Exception as e:
-        print(f"❌ Erreur lors de la récupération des stocks USDA : {e}")
-        return pd.DataFrame()
+print(" Récupération des stocks céréaliers mondiaux (USDA)...")
+try:
+    from openbb import obb
+    # Stocks de maïs (corn)
+    df_corn = obb.commodity.psd_data(commodity='corn', country='world', attribute='ending_stocks', start_year=2022)
+    df_corn['Date'] = pd.to_datetime(df_corn['date'])
+    df_corn = df_corn[['Date', 'value']].rename(columns={'value': 'corn_stocks'})
+    df_corn.set_index('Date', inplace=True)
+    
+    # Stocks de blé (wheat)
+    df_wheat = obb.commodity.psd_data(commodity='wheat', country='world', attribute='ending_stocks', start_year=2022)
+    df_wheat['Date'] = pd.to_datetime(df_wheat['date'])
+    df_wheat = df_wheat[['Date', 'value']].rename(columns={'value': 'wheat_stocks'})
+    df_wheat.set_index('Date', inplace=True)
+    
+    df_stocks = pd.merge(df_corn, df_wheat, left_index=True, right_index=True, how='outer')
+    print(f"✅ Stocks USDA récupérés ! ({len(df_stocks)} années)")
+except Exception as e:
+    print(f"⚠️ Impossible de récupérer les stocks USDA : {e}")
+    df_stocks = pd.DataFrame()
 
 
 # --- 5. SAUVEGARDE DANS LA BASE DE DONNÉES ---
