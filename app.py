@@ -899,7 +899,7 @@ with tab5:
                     # Interprétation
                     st.markdown(f"""
                     <div style="background-color: #F8F9FA; padding: 15px; border-radius: 8px; margin-top: 10px;">
-                        <b>📖 Interprétation :</b> Une variation du prix du gaz met environ 
+                        <b> Interprétation :</b> Une variation du prix du gaz met environ 
                         <b>{mois_estimes:.1f} mois</b> pour se répercuter significativement 
                         sur l'action Yara (proxy des producteurs d'engrais). Ce délai reflète 
                         le temps de transmission des coûts de production aux marchés financiers.
