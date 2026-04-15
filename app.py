@@ -929,7 +929,7 @@ with tab5:
             st.error(" Tension élevée")
     
     with col_delai:
-        st.subheader("⏱️ Délai de transmission estimé")
+        st.subheader(" Délai de transmission estimé")
         st.markdown('<div class="plot-explanation">Temps nécessaire pour qu\'un choc sur le gaz se répercute sur le prix des engrais puis sur l\'action YARA.</div>', unsafe_allow_html=True)
         
         if not df_commodities.empty and 'Gaz_Nat_EU' in df_comm_filtre.columns and 'Yara (Norvège)' in df_prices_filtre.columns:
@@ -964,7 +964,7 @@ with tab5:
                 # Chaîne explicative simplifiée
                 st.markdown("""
                 <div style="background-color: #F8F9FA; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 0.9rem;">
-                    <b>📖 En clair :</b> Il faut environ <b>{:.0f} mois</b> entre une hausse du gaz 
+                    <b> En clair :</b> Il faut environ <b>{:.0f} mois</b> entre une hausse du gaz 
                     et son impact visible sur le cours d'YARA. Puis <b>6 à 12 mois supplémentaires</b> 
                     avant que ça n'arrive dans votre supermarché.
                 </div>
