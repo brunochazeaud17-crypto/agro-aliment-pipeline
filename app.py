@@ -776,7 +776,7 @@ with tab5:
     # === NOUVEAU : RÉSUMÉ POUR LE CITOYEN LAMBDA ===
     st.markdown("""
     <div style="background: linear-gradient(135deg, #1E3F20 0%, #2E4053 100%); padding: 25px; border-radius: 12px; color: white; margin-bottom: 25px;">
-        <h2 style="color: #F1C40F; margin-top: 0;">🛒 Que signifie tout ça pour mon porte-monnaie ?</h2>
+        <h2 style="color: #F1C40F; margin-top: 0;"> Que signifie tout ça pour mon porte-monnaie ?</h2>
         <p style="font-size: 1.1rem; line-height: 1.6;">
             Quand le prix du <b>gaz</b> augmente → le prix des <b>engrais</b> augmente → 
             les <b>agriculteurs</b> utilisent moins d'engrais → les <b>récoltes</b> baissent → 
