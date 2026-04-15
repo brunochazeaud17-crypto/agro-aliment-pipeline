@@ -99,14 +99,14 @@ with st.expander("📌 A propos de ce projet - Cliquez pour ouvrir/fermer", expa
     with col_desc1:
         st.markdown("""
         ### Pourquoi ce dashboard ?
-        La **souveraineté alimentaire** de l'Europe est menacée par sa dépendance aux engrais importés. Voici la chaîne de causalité :
+        La souveraineté alimentaire de l'Europe est menacée par sa dépendance aux engrais importés. Voici la chaîne de causalité :
         
         >  **Gaz naturel**  →  **Ammoniac** (procédé Haber-Bosch) →  **Engrais azotés** →  **Récoltes** →  **Nourriture**
         
         ### Le rôle clé de YARA
         - **YARA** est le **1er producteur mondial d'engrais azotés** d'origine européenne
-        - Le gaz naturel représente **70 à 80% du coût de production** d'une tonne d'ammoniac
-        - **Par exemple** : Quand le gaz passe de 30€ à 100€/MWh, le coût de production d'une tonne d'ammoniac augmente de **+200 à 250€**
+        - Le gaz naturel représente **70 à 80%** du coût de production d'une tonne d'ammoniac
+        - *Par exemple* : Quand le gaz passe de 30€ à 100€/MWh, le coût de production d'une tonne d'ammoniac augmente de +200 à 250€
         - L'Europe importe encore **30% de ses engrais azotés** de Russie et Biélorussie
         
         ### Les autres maillons fragiles
