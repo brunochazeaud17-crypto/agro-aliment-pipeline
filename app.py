@@ -757,7 +757,7 @@ with tab5:
     
     st.markdown("""
     <div class="info-box">
-        <b>📊 Mécanisme de transmission :</b> Une hausse du prix du gaz → hausse du coût des engrais azotés → 
+        <b> Mécanisme de transmission :</b> Une hausse du prix du gaz → hausse du coût des engrais azotés → 
         baisse des marges des agriculteurs → réduction des surfaces cultivées ou des rendements → 
         hausse des prix alimentaires (délai estimé : 6-12 mois).
     </div>
@@ -872,7 +872,7 @@ with tab5:
         with col2:
             # Conteneur pour aligner les hauteurs
             with st.container():
-                st.subheader("⏱️ Délai de Transmission estimé")
+                st.subheader(" Délai de Transmission estimé")
                 st.markdown('<div class="plot-explanation">Corrélation croisée entre le prix du Gaz et l\'action Yara (proxy des engrais), décalée dans le temps.</div>', unsafe_allow_html=True)
                 
                 # Calcul du délai optimal via corrélation croisée
