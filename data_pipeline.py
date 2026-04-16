@@ -12,7 +12,7 @@ API_KEY = os.environ.get("NEWS_API_KEY")
 DB_NAME = "agri_data.db"
 
 if not API_KEY:
-    raise ValueError("🚨 AUCUNE CLÉ API TROUVÉE ! Vérifie tes secrets GitHub ou ton environnement local.")
+    raise ValueError("🚨 AUCUNE CLÉ API TROUVÉE ! Vérifier secrets GitHub ou ton environnement local.")
 
 # --- 1. COLLECTE DES PRIX DES ACTIONS (yfinance) ---
 print("📥 Téléchargement des données boursières...")
@@ -28,10 +28,10 @@ tickers = {
 df_prices = yf.download(list(tickers.values()), start="2022-01-01", interval="1d")['Close']
 inv_tickers = {v: k for k, v in tickers.items()}
 df_prices.rename(columns=inv_tickers, inplace=True)
-print(f"✅ Prix des actions récupérés ! ({len(df_prices)} jours de cotation)")
+print(f" Prix des actions récupérés ! ({len(df_prices)} jours de cotation)")
 
 # --- 2. COLLECTE DES MATIÈRES PREMIÈRES (Gaz et Blé) ---
-print("📥 Téléchargement des données des matières premières...")
+print(" Téléchargement des données des matières premières...")
 commodities_tickers = {
     "Gaz_Nat_EU": "TTF=F",      # Gaz naturel néerlandais (référence européenne)
     "Ble_Chicago": "ZW=F"      # Blé (Chicago SRW Wheat Futures)
@@ -39,10 +39,10 @@ commodities_tickers = {
 
 df_commodities = yf.download(list(commodities_tickers.values()), start="2022-01-01", interval="1d")['Close']
 df_commodities.rename(columns={v: k for k, v in commodities_tickers.items()}, inplace=True)
-print(f"✅ Matières premières récupérées ! ({len(df_commodities)} jours de cotation)")
+print(f" Matières premières récupérées ! ({len(df_commodities)} jours de cotation)")
 
 # --- 3. COLLECTE DES ACTUALITÉS (NewsAPI) ---
-print("📰 Récupération des articles de presse...")
+print(" Récupération des articles de presse...")
 query = '("fertilizer" OR "agriculture") AND ("Europe" OR "gas" OR "Middle East" OR "Iran")'
 url = f"https://newsapi.org/v2/everything?q={query}&language=en&sortBy=relevancy&apiKey={API_KEY}"
 
@@ -55,12 +55,12 @@ if data.get('status') == 'ok':
     df_news['source'] = df_news['source'].apply(lambda x: x.get('name') if isinstance(x, dict) else x)
     print(f" Actualités récupérées ! ({len(df_news)} articles)")
 else:
-    print("❌ Erreur NewsAPI :", data.get('message'))
+    print(" Erreur NewsAPI :", data.get('message'))
     df_news = pd.DataFrame()
 
 # --- 4. ANALYSE DE SENTIMENT (NLP) ---
 if not df_news.empty:
-    print("🧠 Analyse du sentiment des titres...")
+    print(" Analyse du sentiment des titres...")
     nltk.download('vader_lexicon', quiet=True)
     sia = SentimentIntensityAnalyzer()
 
@@ -81,7 +81,7 @@ FAO_FPI_URL = "https://www.fao.org/fileadmin/templates/worldfood/Reports_and_doc
 
 def fetch_fao_fpi():
     """Télécharge l'Indice FAO des prix alimentaires."""
-    print("📥 Téléchargement de l'Indice FAO des prix alimentaires...")
+    print(" Téléchargement de l'Indice FAO des prix alimentaires...")
     try:
         df_fao = pd.read_csv(FAO_FPI_URL, encoding='ISO-8859-1')
         # La colonne date est généralement 'Date'
@@ -89,10 +89,10 @@ def fetch_fao_fpi():
         df_fao.set_index('Date', inplace=True)
         # On sélectionne la colonne 'Food Price Index'
         df_fao_fpi = df_fao[['Food Price Index']].dropna()
-        print(f"✅ Indice FAO récupéré ! ({len(df_fao_fpi)} mois de données)")
+        print(f" Indice FAO récupéré ! ({len(df_fao_fpi)} mois de données)")
         return df_fao_fpi
     except Exception as e:
-        print(f"❌ Erreur lors du téléchargement de l'indice FAO : {e}")
+        print(f" Erreur lors du téléchargement de l'indice FAO : {e}")
         return pd.DataFrame()
 
 
@@ -112,14 +112,14 @@ try:
     df_wheat.set_index('Date', inplace=True)
     
     df_stocks = pd.merge(df_corn, df_wheat, left_index=True, right_index=True, how='outer')
-    print(f"✅ Stocks USDA récupérés ! ({len(df_stocks)} années)")
+    print(f" Stocks USDA récupérés ! ({len(df_stocks)} années)")
 except Exception as e:
-    print(f"⚠️ Impossible de récupérer les stocks USDA : {e}")
+    print(f" Impossible de récupérer les stocks USDA : {e}")
     df_stocks = pd.DataFrame()
 
 
 # --- 5. SAUVEGARDE DANS LA BASE DE DONNÉES ---
-print("💾 Sauvegarde dans SQLite...")
+print(" Sauvegarde dans SQLite...")
 conn = sqlite3.connect(DB_NAME)
 
 # Sauvegarde des prix des actions
