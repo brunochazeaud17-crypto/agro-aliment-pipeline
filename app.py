@@ -1229,10 +1229,10 @@ with tab5:
 
 
 # ==========================================
-# ONGLET 6 : SCÉNARIOS DE CRISE (VERSION ENRICHIE)
+# ONGLET 6 : SCÉNARIOS DE CRISE (VERSION ENRICHIE + CARTE)
 # ==========================================
 with tab6:
-    st.header("📉 Scénarios de Crise : simulateur de chocs")
+    st.header(" Scénarios de Crise : simulateur de chocs")
     st.markdown("""
     <div class="info-box">
     <b>💡 Principe :</b> Choisissez un scénario ou ajustez manuellement les curseurs. 
@@ -1241,26 +1241,19 @@ with tab6:
     """, unsafe_allow_html=True)
 
     # --- Données nécessaires pour la simulation ---
-    # Dernières valeurs connues
     last_prices = df_prices.iloc[-1] if not df_prices.empty else {}
     last_commodities = df_commodities.iloc[-1] if not df_commodities.empty else {}
-    last_gas = last_commodities.get('Gaz_Nat_EU', 30.0)  # Valeur par défaut ~30€/MWh
+    last_gas = last_commodities.get('Gaz_Nat_EU', 30.0)   # Valeur par défaut ~30€/MWh
     last_wheat = last_commodities.get('Ble_Chicago', 600.0)  # cents/bushel
 
     # --- Coefficients de transmission (calibrés sur données historiques) ---
-    # Gaz → Coût ammoniac (Yara) : élasticité ≈ -0.8 (hausse gaz = baisse marge)
     GAS_TO_YARA_ELAST = -0.65
     GAS_TO_OCI_ELAST = -0.50
     GAS_TO_ICL_ELAST = -0.15
     GAS_TO_KSPLUS_ELAST = -0.40
     GAS_TO_AZOTY_ELAST = -0.70
-
-    # Gaz → Coût production agricole (hausse gaz → hausse engrais → baisse utilisation → baisse offre)
-    # L'impact sur le prix du blé est positif (moins d'offre)
-    GAS_TO_WHEAT_ELAST = 0.25  # +10% gaz → +2.5% blé après délai
-
-    # Coût engrais → Inflation alimentaire
-    FERT_TO_FOOD_ELAST = 0.18  # +10% coût engrais → +1.8% prix alimentaires après 12 mois
+    GAS_TO_WHEAT_ELAST = 0.25
+    FERT_TO_FOOD_ELAST = 0.18
 
     # --- SCÉNARIOS PRÉDÉFINIS ---
     scenarios = {
@@ -1272,55 +1265,70 @@ with tab6:
         "Personnalisé": {"gas_var": 0, "geopol_risk": 0, "trade_disruption": 0},
     }
 
+    # --- INITIALISATION DU SESSION STATE ---
+    if "scenario_params" not in st.session_state:
+        st.session_state.scenario_params = scenarios["Personnalisé"].copy()
+
+    # --- SÉLECTION DU SCÉNARIO ---
     col_scen, col_apply = st.columns([3, 1])
     with col_scen:
-        scenario_choice = st.selectbox("📌 Choisir un scénario pré‑défini", list(scenarios.keys()))
+        # Déterminer l'index du scénario correspondant aux paramètres actuels
+        current_params = st.session_state.scenario_params
+        default_index = list(scenarios.keys()).index("Personnalisé")
+        for i, (name, params) in enumerate(scenarios.items()):
+            if (params["gas_var"] == current_params["gas_var"] and
+                params["geopol_risk"] == current_params["geopol_risk"] and
+                params["trade_disruption"] == current_params["trade_disruption"]):
+                default_index = i
+                break
+        scenario_choice = st.selectbox(" Choisir un scénario pré‑défini", list(scenarios.keys()), index=default_index)
     with col_apply:
         st.write("")
         st.write("")
         apply_scenario = st.button("Appliquer ce scénario", type="primary")
 
-    # Gestion de l'état du scénario personnalisé
-    if "scenario_params" not in st.session_state:
-        st.session_state.scenario_params = {"gas_var": 0, "geopol_risk": 0, "trade_disruption": 0}
-
-    if apply_scenario and scenario_choice != "Personnalisé":
+    if apply_scenario:
         st.session_state.scenario_params = scenarios[scenario_choice].copy()
-    elif scenario_choice == "Personnalisé" and not apply_scenario:
-        # On garde les valeurs du session_state
-        pass
 
-    # --- CURSEURS PERSONNALISABLES ---
-    st.subheader("⚙️ Ajustement des facteurs de choc")
+    # Récupérer les valeurs actuelles (après application éventuelle)
+    gas_var = st.session_state.scenario_params["gas_var"]
+    geopol_risk = st.session_state.scenario_params["geopol_risk"]
+    trade_disruption = st.session_state.scenario_params["trade_disruption"]
+
+    # --- SLIDERS PERSONNALISABLES (modifient directement session_state) ---
+    st.subheader(" Ajustement des facteurs de choc")
     col1, col2, col3 = st.columns(3)
     with col1:
-        gas_var = st.slider(
+        new_gas_var = st.slider(
             "Variation prix du gaz TTF (%)",
-            min_value=-50, max_value=150, value=st.session_state.scenario_params["gas_var"], step=5,
-            help="Impact direct sur les marges des producteurs d'engrais azotés."
+            min_value=-50, max_value=150, value=gas_var, step=5,
+            help="Impact direct sur les marges des producteurs d'engrais azotés.",
+            key="slider_gas_var"
         )
+        st.session_state.scenario_params["gas_var"] = new_gas_var
     with col2:
-        geopol_risk = st.slider(
+        new_geopol_risk = st.slider(
             "Prime de risque géopolitique",
-            min_value=-0.5, max_value=1.0, value=st.session_state.scenario_params["geopol_risk"], step=0.05,
-            help="Augmente la volatilité et pèse sur les valorisations (ICL, OCI)."
+            min_value=-0.5, max_value=1.0, value=geopol_risk, step=0.05,
+            help="Augmente la volatilité et pèse sur les valorisations (ICL, OCI).",
+            key="slider_geopol_risk"
         )
+        st.session_state.scenario_params["geopol_risk"] = new_geopol_risk
     with col3:
-        trade_disruption = st.slider(
+        new_trade_disruption = st.slider(
             "Perturbation des chaînes d'approvisionnement",
-            min_value=-0.5, max_value=1.0, value=st.session_state.scenario_params["trade_disruption"], step=0.05,
-            help="Hausse des coûts de transport, retards, pénuries ponctuelles."
+            min_value=-0.5, max_value=1.0, value=trade_disruption, step=0.05,
+            help="Hausse des coûts de transport, retards, pénuries ponctuelles.",
+            key="slider_trade_disruption"
         )
+        st.session_state.scenario_params["trade_disruption"] = new_trade_disruption
 
-    # Mise à jour du session state pour le scénario personnalisé
-    st.session_state.scenario_params = {
-        "gas_var": gas_var,
-        "geopol_risk": geopol_risk,
-        "trade_disruption": trade_disruption
-    }
+    # Mise à jour des variables après modification manuelle
+    gas_var = st.session_state.scenario_params["gas_var"]
+    geopol_risk = st.session_state.scenario_params["geopol_risk"]
+    trade_disruption = st.session_state.scenario_params["trade_disruption"]
 
     # --- CALCUL DES IMPACTS ---
-    # Impact sur les actions
     impact = {}
     impact["Yara (Norvège)"] = gas_var * GAS_TO_YARA_ELAST / 100 + geopol_risk * -0.1 + trade_disruption * -0.05
     impact["OCI (Pays-Bas)"] = gas_var * GAS_TO_OCI_ELAST / 100 + geopol_risk * -0.15 + trade_disruption * -0.1
@@ -1329,20 +1337,19 @@ with tab6:
     impact["Grupa Azoty (Pologne)"] = gas_var * GAS_TO_AZOTY_ELAST / 100 + geopol_risk * -0.2 + trade_disruption * -0.1
     impact["CF Industries (USA/UK)"] = gas_var * -0.3 / 100 + geopol_risk * -0.05
 
-    # Impact sur le prix du blé (en %)
+    # Impact sur le prix du blé
     wheat_impact = gas_var * GAS_TO_WHEAT_ELAST / 100 + trade_disruption * 0.15
     new_wheat_price = last_wheat * (1 + wheat_impact)
 
-    # Impact sur l'inflation alimentaire (en points de %)
-    food_inflation_impact = (gas_var * 0.12) + (trade_disruption * 0.8)  # points de pourcentage
-    current_food_inflation = 2.3  # moyenne UE récente (à titre indicatif)
+    # Impact sur l'inflation alimentaire
+    food_inflation_impact = (gas_var * 0.12) + (trade_disruption * 0.8)
+    current_food_inflation = 2.3
     new_food_inflation = current_food_inflation + food_inflation_impact
 
-    # --- VISUALISATION DES RÉSULTATS ---
+    # --- VISUALISATION DES RÉSULTATS (tableau, barres, waterfall) ---
     st.divider()
-    st.subheader("📊 Résultats de la simulation")
+    st.subheader(" Résultats de la simulation")
 
-    # Tableau des impacts par acteur
     impact_df = pd.DataFrame([
         {
             "Acteur": act,
@@ -1354,7 +1361,6 @@ with tab6:
     ])
     st.dataframe(impact_df, use_container_width=True, hide_index=True)
 
-    # Graphique en barres comparant cours actuel vs simulé
     fig_bar = go.Figure()
     for act in impact_df["Acteur"]:
         fig_bar.add_trace(go.Bar(
@@ -1383,16 +1389,14 @@ with tab6:
     st.subheader(" Cascade de transmission du choc")
     col_w1, col_w2 = st.columns([2, 1])
     with col_w1:
-        # Waterfall : Gaz → Engrais → Blé → Inflation
         steps = ["Prix du gaz", "Marge producteur engrais", "Prix du blé", "Inflation alimentaire"]
         values = [
-            gas_var,  # variation gaz en %
-            impact["Yara (Norvège)"] * 100,  # variation marge (inverse)
-            wheat_impact * 100,  # variation blé en %
-            food_inflation_impact  # points d'inflation ajoutés
+            gas_var,
+            impact["Yara (Norvège)"] * 100,
+            wheat_impact * 100,
+            food_inflation_impact
         ]
         measures = ["relative"] * len(values)
-        # Cumul pour donner une idée de l'ampleur
         fig_waterfall = go.Figure(go.Waterfall(
             orientation="v",
             measure=measures,
@@ -1413,35 +1417,27 @@ with tab6:
         st.plotly_chart(fig_waterfall, use_container_width=True)
 
     with col_w2:
-        st.markdown("""
+        st.markdown(f"""
         <div style="background-color:#F8F9FA; padding:20px; border-radius:10px; height:100%;">
         <h4> Impact macro-économique</h4>
         <hr>
         <p><b>Prix du blé (Chicago) :</b><br>
-        Actuel : {:.2f} ¢/boisseau<br>
-        Simulé : {:.2f} ¢/boisseau <span style="color:{};">({:+.1f}%)</span>
+        Actuel : {last_wheat:.2f} ¢/boisseau<br>
+        Simulé : {new_wheat_price:.2f} ¢/boisseau <span style="color:{'#E74C3C' if wheat_impact > 0 else '#27AE60'};">({wheat_impact*100:+.1f}%)</span>
         </p>
         <p><b>Inflation alimentaire UE :</b><br>
-        Actuelle : {:.1f}%<br>
-        Simulée : {:.1f}% <span style="color:{};">({:+.1f} pts)</span>
+        Actuelle : {current_food_inflation:.1f}%<br>
+        Simulée : {new_food_inflation:.1f}% <span style="color:{'#E74C3C' if food_inflation_impact > 0 else '#27AE60'};">({food_inflation_impact:+.1f} pts)</span>
         </p>
         <hr>
         <p style="font-size:0.9rem;"><i>*Estimations basées sur les élasticités historiques (2022-2024).</i></p>
         </div>
-        """.format(
-            last_wheat, new_wheat,
-            "#E74C3C" if wheat_impact > 0 else "#27AE60", wheat_impact*100,
-            current_food_inflation, new_food_inflation,
-            "#E74C3C" if food_inflation_impact > 0 else "#27AE60", food_inflation_impact
-        ), unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-
-        # --- CARTE INTERACTIVE DES IMPACTS RÉGIONAUX ---
+    # --- CARTE INTERACTIVE DES IMPACTS RÉGIONAUX ---
     st.subheader(" Carte des impacts régionaux simulés")
     st.markdown('<div class="plot-explanation">Estimation de la variation de l\'inflation alimentaire par pays en fonction du scénario choisi.</div>', unsafe_allow_html=True)
 
-    # Données de base : sensibilité à la hausse des engrais par pays (coefficient multiplicateur)
-    # Ces valeurs sont approximatives et reflètent la dépendance aux importations et l'intensité agricole.
     country_sensitivity = {
         'France': 0.8, 'Allemagne': 0.7, 'Italie': 1.1, 'Espagne': 1.0, 'Pologne': 1.5,
         'Pays-Bas': 0.6, 'Belgique': 0.9, 'Roumanie': 1.6, 'Grèce': 1.3, 'Portugal': 1.2,
@@ -1450,8 +1446,6 @@ with tab6:
         'Slovénie': 1.1, 'Croatie': 1.3, 'Royaume-Uni': 0.6, 'Norvège': 0.4, 'Suisse': 0.3,
         'Hongrie': 1.6, 'Rép. Tchèque': 1.2
     }
-
-    # Codes ISO alpha-3 pour la carte Plotly
     country_codes = {
         'France': 'FRA', 'Allemagne': 'DEU', 'Italie': 'ITA', 'Espagne': 'ESP', 'Pologne': 'POL',
         'Pays-Bas': 'NLD', 'Belgique': 'BEL', 'Roumanie': 'ROU', 'Grèce': 'GRC', 'Portugal': 'PRT',
@@ -1461,17 +1455,12 @@ with tab6:
         'Hongrie': 'HUN', 'Rép. Tchèque': 'CZE'
     }
 
-    # Calcul de l'impact sur l'inflation alimentaire par pays
-    # L'impact dépend du choc gazier et des perturbations commerciales
-    base_food_impact = food_inflation_impact  # déjà calculé (points de %)
-    # Pour chaque pays, on module par la sensibilité
+    base_food_impact = food_inflation_impact
     impact_by_country = {}
     for country, sens in country_sensitivity.items():
-        # L'impact de base est multiplié par la sensibilité, puis ajusté avec la prime géopolitique
         country_impact = base_food_impact * sens + geopol_risk * 1.5
         impact_by_country[country] = country_impact
 
-    # Création du DataFrame pour Plotly
     map_df = pd.DataFrame([
         {
             'Pays': country,
@@ -1483,7 +1472,6 @@ with tab6:
         if country in country_codes
     ])
 
-    # Catégorisation pour le tooltip
     def categorize_impact(val):
         if val < 1.0: return "🟢 Faible impact"
         elif val < 2.5: return "🟡 Impact modéré"
@@ -1498,7 +1486,6 @@ with tab6:
         axis=1
     )
 
-    # Création de la carte choroplèthe
     fig_map_impact = px.choropleth(
         map_df,
         locations='Code',
@@ -1592,7 +1579,6 @@ with tab6:
     # --- IMPACT SUR L'AGRICULTEUR (RATIO BLÉ/ENGRAIS) ---
     st.subheader(" Impact sur le pouvoir d'achat des agriculteurs")
     if 'Yara (Norvège)' in last_prices and 'Ble_Chicago' in last_commodities:
-        # Ratio actuel
         current_ratio = last_wheat / last_prices['Yara (Norvège)']
         new_yara_price = last_prices['Yara (Norvège)'] * (1 + impact["Yara (Norvège)"])
         new_ratio = new_wheat_price / new_yara_price
@@ -1637,7 +1623,7 @@ with tab6:
             </div>
             """, unsafe_allow_html=True)
 
-    # --- ANALYSE DE SENSIBILITÉ ---
+    # --- ANALYSE DE SENSIBILITÉ (optionnelle) ---
     with st.expander(" Analyse de sensibilité avancée"):
         st.markdown("Faites varier plusieurs hypothèses simultanément.")
         col_sens1, col_sens2 = st.columns(2)
@@ -1647,10 +1633,9 @@ with tab6:
         with col_sens2:
             elast_fert_food = st.slider("Élasticité Engrais → Inflation alim.", 0.0, 0.3, FERT_TO_FOOD_ELAST, 0.02)
 
-        # Recalcul avec ces nouvelles élasticités
         sens_impact_yara = gas_var * elast_gas_yara / 100 + geopol_risk * -0.1 + trade_disruption * -0.05
         sens_wheat_impact = gas_var * elast_gas_wheat / 100 + trade_disruption * 0.15
-        sens_food_impact = (gas_var * 0.12) + (trade_disruption * 0.8)  # inchangé ici
+        sens_food_impact = (gas_var * 0.12) + (trade_disruption * 0.8)
 
         st.metric("Yara (sensibilité)", f"{sens_impact_yara*100:+.1f}%",
                   delta=f"vs référence {impact['Yara (Norvège)']*100:+.1f}%")
