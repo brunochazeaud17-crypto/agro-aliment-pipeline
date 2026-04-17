@@ -760,7 +760,7 @@ with tab4:
                 fig_ratio = go.Figure()
                 fig_ratio.add_trace(go.Scatter(x=ratio.index, y=ratio, fill='tozeroy', line=dict(color='#D4AC0D')))
                 fig_ratio.add_hline(y=ratio.mean(), line_dash="dash", annotation_text="Moyenne", line_color="gray")
-                fig_ratio.update_layout(height=350, title="Ratio Prix du Blé / Prix de l'Action Engrais (Proxy)")
+                fig_ratio.update_layout(height=350, title="Ratio Prix du Blé / Prix de l'Action Engrais")
                 st.plotly_chart(fig_ratio, use_container_width=True)
             else:
                 st.info("Pas de dates communes entre le Blé et Yara.")
