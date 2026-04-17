@@ -1257,12 +1257,12 @@ with tab6:
 
     # --- SCENARIOS PREDEFINIS ---
     scenarios = {
-        "Choc gazier modere (+30%)": {"gas_var": 30, "geopol_risk": 0, "trade_disruption": 0},
-        "Crise energetique severe (+80%)": {"gas_var": 80, "geopol_risk": 0.2, "trade_disruption": 0.1},
-        "Conflit Moyen-Orient (Iran/Israel)": {"gas_var": 25, "geopol_risk": 0.4, "trade_disruption": 0.3},
-        "Embargo russe sur les engrais": {"gas_var": 40, "geopol_risk": 0.3, "trade_disruption": 0.5},
-        "Baisse du gaz (-30%, favorable)": {"gas_var": -30, "geopol_risk": -0.1, "trade_disruption": -0.1},
-        "Personnalise": {"gas_var": 0, "geopol_risk": 0, "trade_disruption": 0},
+        "Choc gazier modere (+30%)": {"gas_var": 30.0, "geopol_risk": 0.0, "trade_disruption": 0.0},
+        "Crise energetique severe (+80%)": {"gas_var": 80.0, "geopol_risk": 0.2, "trade_disruption": 0.1},
+        "Conflit Moyen-Orient (Iran/Israel)": {"gas_var": 25.0, "geopol_risk": 0.4, "trade_disruption": 0.3},
+        "Embargo russe sur les engrais": {"gas_var": 40.0, "geopol_risk": 0.3, "trade_disruption": 0.5},
+        "Baisse du gaz (-30%, favorable)": {"gas_var": -30.0, "geopol_risk": -0.1, "trade_disruption": -0.1},
+        "Personnalise": {"gas_var": 0.0, "geopol_risk": 0.0, "trade_disruption": 0.0},
     }
 
     # --- INITIALISATION DU SESSION STATE ---
@@ -1291,9 +1291,9 @@ with tab6:
         st.session_state.scenario_params = scenarios[scenario_choice].copy()
 
     # Recuperer les valeurs actuelles (apres application eventuelle)
-    gas_var = st.session_state.scenario_params["gas_var"]
-    geopol_risk = st.session_state.scenario_params["geopol_risk"]
-    trade_disruption = st.session_state.scenario_params["trade_disruption"]
+    gas_var = float(st.session_state.scenario_params["gas_var"])
+    geopol_risk = float(st.session_state.scenario_params["geopol_risk"])
+    trade_disruption = float(st.session_state.scenario_params["trade_disruption"])
 
     # --- SLIDERS PERSONNALISABLES (avec protection des valeurs) ---
     st.subheader("Ajustement des facteurs de choc")
@@ -1301,15 +1301,15 @@ with tab6:
 
     with col1:
         # Securisation de la valeur du slider gaz
-        gas_min, gas_max = -50, 150
+        gas_min, gas_max = -50.0, 150.0
         safe_gas = float(max(gas_min, min(gas_max, gas_var)))
         new_gas_var = st.slider(
             "Variation prix du gaz TTF (%)",
-            min_value=gas_min, max_value=gas_max, value=safe_gas, step=5,
+            min_value=gas_min, max_value=gas_max, value=safe_gas, step=5.0,
             help="Impact direct sur les marges des producteurs d'engrais azotes.",
             key="slider_gas_var"
         )
-        st.session_state.scenario_params["gas_var"] = new_gas_var
+        st.session_state.scenario_params["gas_var"] = float(new_gas_var)
 
     with col2:
         # Securisation de la valeur du slider geopolitique
@@ -1321,7 +1321,7 @@ with tab6:
             help="Augmente la volatilite et pese sur les valorisations (ICL, OCI).",
             key="slider_geopol_risk"
         )
-        st.session_state.scenario_params["geopol_risk"] = new_geopol_risk
+        st.session_state.scenario_params["geopol_risk"] = float(new_geopol_risk)
 
     with col3:
         # Securisation de la valeur du slider trade disruption
@@ -1333,24 +1333,24 @@ with tab6:
             help="Hausse des couts de transport, retards, penuries ponctuelles.",
             key="slider_trade_disruption"
         )
-        st.session_state.scenario_params["trade_disruption"] = new_trade_disruption
+        st.session_state.scenario_params["trade_disruption"] = float(new_trade_disruption)
 
     # Mise a jour des variables apres modification manuelle
-    gas_var = st.session_state.scenario_params["gas_var"]
-    geopol_risk = st.session_state.scenario_params["geopol_risk"]
-    trade_disruption = st.session_state.scenario_params["trade_disruption"]
+    gas_var = float(st.session_state.scenario_params["gas_var"])
+    geopol_risk = float(st.session_state.scenario_params["geopol_risk"])
+    trade_disruption = float(st.session_state.scenario_params["trade_disruption"])
 
     # --- CALCUL DES IMPACTS ---
     impact = {}
-    impact["Yara (Norvege)"] = gas_var * GAS_TO_YARA_ELAST / 100 + geopol_risk * -0.1 + trade_disruption * -0.05
-    impact["OCI (Pays-Bas)"] = gas_var * GAS_TO_OCI_ELAST / 100 + geopol_risk * -0.15 + trade_disruption * -0.1
-    impact["ICL (Israel)"] = gas_var * GAS_TO_ICL_ELAST / 100 + geopol_risk * -0.4 + trade_disruption * -0.2
-    impact["K+S (Allemagne)"] = gas_var * GAS_TO_KSPLUS_ELAST / 100 + geopol_risk * -0.1 + trade_disruption * -0.05
-    impact["Grupa Azoty (Pologne)"] = gas_var * GAS_TO_AZOTY_ELAST / 100 + geopol_risk * -0.2 + trade_disruption * -0.1
-    impact["CF Industries (USA/UK)"] = gas_var * -0.3 / 100 + geopol_risk * -0.05
+    impact["Yara (Norvege)"] = gas_var * GAS_TO_YARA_ELAST / 100.0 + geopol_risk * -0.1 + trade_disruption * -0.05
+    impact["OCI (Pays-Bas)"] = gas_var * GAS_TO_OCI_ELAST / 100.0 + geopol_risk * -0.15 + trade_disruption * -0.1
+    impact["ICL (Israel)"] = gas_var * GAS_TO_ICL_ELAST / 100.0 + geopol_risk * -0.4 + trade_disruption * -0.2
+    impact["K+S (Allemagne)"] = gas_var * GAS_TO_KSPLUS_ELAST / 100.0 + geopol_risk * -0.1 + trade_disruption * -0.05
+    impact["Grupa Azoty (Pologne)"] = gas_var * GAS_TO_AZOTY_ELAST / 100.0 + geopol_risk * -0.2 + trade_disruption * -0.1
+    impact["CF Industries (USA/UK)"] = gas_var * -0.3 / 100.0 + geopol_risk * -0.05
 
     # Impact sur le prix du ble
-    wheat_impact = gas_var * GAS_TO_WHEAT_ELAST / 100 + trade_disruption * 0.15
+    wheat_impact = gas_var * GAS_TO_WHEAT_ELAST / 100.0 + trade_disruption * 0.15
     new_wheat_price = last_wheat * (1 + wheat_impact)
 
     # Impact sur l'inflation alimentaire
@@ -1645,8 +1645,8 @@ with tab6:
         with col_sens2:
             elast_fert_food = st.slider("Elasticite Engrais → Inflation alim.", 0.0, 0.3, FERT_TO_FOOD_ELAST, 0.02)
 
-        sens_impact_yara = gas_var * elast_gas_yara / 100 + geopol_risk * -0.1 + trade_disruption * -0.05
-        sens_wheat_impact = gas_var * elast_gas_wheat / 100 + trade_disruption * 0.15
+        sens_impact_yara = gas_var * elast_gas_yara / 100.0 + geopol_risk * -0.1 + trade_disruption * -0.05
+        sens_wheat_impact = gas_var * elast_gas_wheat / 100.0 + trade_disruption * 0.15
         sens_food_impact = (gas_var * 0.12) + (trade_disruption * 0.8)
 
         st.metric("Yara (sensibilite)", f"{sens_impact_yara*100:+.1f}%",
