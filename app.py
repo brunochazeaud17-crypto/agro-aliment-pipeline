@@ -650,7 +650,7 @@ with tab3:
 
     # --- GRAPHIQUE 8 : HEATMAP DÉLAIS ---
     st.subheader("Matrice des délais de réaction")
-    st.markdown('<div class="plot-explanation">Corrélation entre le sentiment du jour J et la variation du prix à J+lag. Vert = le sentiment anticipe le prix. Rouge = relation inverse.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="plot-explanation">Corrélation entre le sentiment du jour J et la variation du prix à J+lag. Bleu = le sentiment anticipe le prix. Rouge = relation inverse.</div>', unsafe_allow_html=True)
     cross_data = []
     for act in entreprises:
         temp = pd.DataFrame({'Prix': df_prices_filtre[act].pct_change(), 'Sentiment': df_sent.set_index('Date')['Sentiment_Moyen'].reindex(df_prices_filtre.index, fill_value=0)}).dropna()
